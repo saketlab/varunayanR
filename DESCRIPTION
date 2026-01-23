@@ -1,0 +1,50 @@
+Package: varunayan
+Type: Package
+Title: Package for downloading and processing climatic variables from ERA5 and IMD
+Version: 0.1.0
+Authors@R: c(person("Saket", "Choudhary", email = "saketc@iitb.ac.in", role = c("aut", "cre")))
+Author: Saket Choudhary [aut,cre]
+Maintainer: Saket Choudhary <saketc@iitb.ac.in>
+Description: R package for downloading and processing ERA5 climate data and IMD
+    (Indian Meteorological Department) gridded data for custom geographical regions.
+    Provides functions to extract climate data using bounding boxes, GeoJSON polygons,
+    or point coordinates. Supports various temporal frequencies and spatial resolutions
+    with analysis-ready outputs.
+License: MIT + file LICENSE
+URL: https://github.com/saketlab/varunayanR
+BugReports: https://github.com/saketlab/varunayanR/issues
+Depends: 
+    R (>= 4.1.0)
+Imports:
+    data.table,
+    ecmwfr (>= 2.0.0),
+    sf,
+    stars,
+    ncdf4,
+    ncmeta,
+    dplyr,
+    lubridate,
+    jsonlite,
+    magrittr,
+    rlang,
+    terra,
+    tools,
+    utils,
+    httr,
+    digest
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    ggplot2,
+    maps,
+    patchwork,
+    scales,
+    tidyr,
+    units,
+    R.utils
+VignetteBuilder: knitr
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
