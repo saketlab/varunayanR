@@ -1,18 +1,23 @@
-# varunayanR <img src="man/figures/logo.png" align="right" height="139" alt="varunayanR logo" />
+# varunayanR
 
 [![R-CMD-check](https://github.com/saketlab/varunayanR/workflows/R-CMD-check/badge.svg)](https://github.com/saketlab/varunayanR/actions)
-[![CRAN status](https://www.r-pkg.org/badges/version/varunayan)](https://CRAN.R-project.org/package=varunayan)
-[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/varunayan)](https://CRAN.R-project.org/package=varunayan)
+[![Lifecycle:
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-
-varunayanR makes it effortless to download and process **ERA5** reanalysis and **IMD** gridded climate data for any geographical region. Get analysis-ready data frames with just a few lines of code.
+varunayanR makes it effortless to download and process **ERA5**
+reanalysis and **IMD** gridded climate data for any geographical region.
+Get analysis-ready data frames with just a few lines of code.
 
 ## Quick Start
 
 ### Installation
 
-```r
+``` r
+
 # Install from GitHub
 # install.packages("devtools")
 devtools::install_github("saketlab/varunayanR")
@@ -20,7 +25,8 @@ devtools::install_github("saketlab/varunayanR")
 
 ### Basic Usage
 
-```r
+``` r
+
 library(varunayan)
 
 # 1. Setup CDS credentials (ERA5 only, one-time)
@@ -59,7 +65,8 @@ head(temperature_data)
 
 ### Download Data for Custom GeoJSON Region
 
-```r
+``` r
+
 # Use any GeoJSON file
 data <- era5ify_geojson(
   request_id = "indian_states",
@@ -73,7 +80,8 @@ data <- era5ify_geojson(
 
 ### Multi-Year IMD Analysis
 
-```r
+``` r
+
 # Download 20 years of rainfall data
 rainfall <- imd_rainfall_bbox(
   request_id = "monsoon_study",
@@ -95,7 +103,8 @@ monsoon <- rainfall %>%
 
 ### Pressure-level data
 
-```r
+``` r
+
 # Download ERA5 atmospheric data at multiple levels
 atmos_data <- era5ify_bbox(
   request_id = "atmosphere",
@@ -111,13 +120,15 @@ atmos_data <- era5ify_bbox(
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.
+For major changes, please open an issue first to discuss what you would
+like to change.
 
 ## Citation
 
 If you use varunayanR in your research, please cite:
 
-```bibtex
+``` bibtex
 @software{varunayanr2024,
   author = {Jagtap, Atharva and Choudhary, Saket},
   title = {varunayanR: Analysis-ready Climate Data for Custom Regions},
@@ -129,8 +140,10 @@ If you use varunayanR in your research, please cite:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see
+[LICENSE](https://saketlab.github.io/varunayanR/LICENSE) file for
+details.
 
+------------------------------------------------------------------------
 
----
-
+**Made by [Saket Lab](https://saketlab.org)**

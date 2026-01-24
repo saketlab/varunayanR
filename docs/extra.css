@@ -1,0 +1,273 @@
+/* Custom styling for varunayanR package website */
+
+/* Color scheme - Climate/Weather themed */
+:root {
+  --climate-blue: #0054a6;
+  --climate-green: #00a651;
+  --climate-sky: #87ceeb;
+  --climate-ocean: #006994;
+}
+
+/* FORCE ALL CODE TO BE VISIBLE - Nuclear option */
+pre, pre *,
+code, code *,
+.sourceCode, .sourceCode *,
+div.sourceCode, div.sourceCode *,
+pre.sourceCode, pre.sourceCode * {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Code block containers */
+div.sourceCode {
+  background-color: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+  border-left: 4px solid var(--climate-blue) !important;
+  border-radius: 0.5rem !important;
+  padding: 0 !important;
+  margin: 1rem 0 !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+pre.sourceCode {
+  background-color: #f8f9fa !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 1rem !important;
+  margin: 0 !important;
+  overflow-x: auto !important;
+}
+
+/* Standalone pre blocks (not in sourceCode div) */
+pre:not(.sourceCode) {
+  background-color: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+  border-left: 4px solid var(--climate-blue) !important;
+  border-radius: 0.5rem !important;
+  padding: 1rem !important;
+  margin: 1rem 0 !important;
+  overflow-x: auto !important;
+}
+
+/* Inline code */
+code {
+  background-color: #e9ecef !important;
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 0.25rem !important;
+  color: #000000 !important;
+}
+
+/* Syntax highlighting - VISIBLE colors on white */
+.sourceCode span.kw { color: #9d00ff !important; font-weight: bold !important; } /* Keywords - bright purple */
+.sourceCode span.dt { color: #ff6600 !important; font-weight: bold !important; } /* Data types - bright orange */
+.sourceCode span.dv { color: #ff6600 !important; font-weight: bold !important; } /* Numbers - bright orange */
+.sourceCode span.st { color: #008000 !important; font-weight: bold !important; } /* Strings - green */
+.sourceCode span.co { color: #0000ff !important; font-weight: bold !important; font-style: italic !important; } /* Comments - BLUE */
+.sourceCode span.fu { color: #cc0000 !important; font-weight: bold !important; } /* Functions - red */
+.sourceCode span.op { color: #000000 !important; } /* Operators - black */
+.sourceCode span.va { color: #000000 !important; } /* Variables - black */
+
+/* Section headers */
+h1, h2 {
+  font-weight: 600;
+  color: var(--climate-ocean);
+  border-bottom: 2px solid var(--climate-green);
+  padding-bottom: 0.5rem;
+  margin-top: 2rem;
+}
+
+h3, h4 {
+  color: var(--climate-blue);
+  font-weight: 500;
+}
+
+/* Navigation bar */
+.navbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Cards */
+.card {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Links */
+a {
+  color: var(--climate-blue);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--climate-ocean);
+  text-decoration: underline;
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, var(--climate-blue) 0%, var(--climate-ocean) 100%);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 84, 166, 0.3);
+}
+
+/* Tables */
+table {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+thead {
+  background: linear-gradient(135deg, var(--climate-blue) 0%, var(--climate-ocean) 100%);
+  color: white;
+}
+
+tbody tr:hover {
+  background: rgba(0, 166, 81, 0.05);
+}
+
+/* Footer */
+footer {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  padding: 2rem 1rem;
+  margin-top: 4rem;
+  width: 100%;
+  overflow: visible;
+  min-height: 80px;
+}
+
+footer .container,
+footer .container-fluid {
+  max-width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+footer p,
+footer a {
+  color: white !important;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+footer a:hover {
+  color: var(--accent-cool) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus states */
+*:focus {
+  outline: 3px solid #4ecdc4;
+  outline-offset: 2px;
+}
+
+/* Copy to clipboard button - Icon design */
+.btn-copy-ex {
+  position: absolute !important;
+  top: 0.5rem !important;
+  right: 0.5rem !important;
+  width: 32px !important;
+  height: 32px !important;
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 0.375rem !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  z-index: 100 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+  font-size: 0 !important;
+}
+
+.btn-copy-ex:hover {
+  background-color: var(--climate-blue) !important;
+  color: white !important;
+  border-color: var(--climate-blue) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(0, 84, 166, 0.2) !important;
+}
+
+.btn-copy-ex:active {
+  background-color: var(--climate-green) !important;
+  border-color: var(--climate-green) !important;
+  transform: translateY(0) !important;
+}
+
+/* Hide any existing content/icons */
+.btn-copy-ex * {
+  display: none !important;
+}
+
+/* Create clipboard icon using CSS */
+.btn-copy-ex::before {
+  content: "" !important;
+  display: block !important;
+  width: 14px !important;
+  height: 16px !important;
+  border: 2px solid currentColor !important;
+  border-radius: 2px !important;
+  position: relative !important;
+  background: transparent !important;
+}
+
+/* Clipboard top clip */
+.btn-copy-ex::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: 9px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 8px !important;
+  height: 3px !important;
+  border: 2px solid currentColor !important;
+  border-bottom: none !important;
+  border-radius: 2px 2px 0 0 !important;
+  background: transparent !important;
+}
+
+/* Ensure button is visible */
+div.sourceCode .btn-copy-ex {
+  visibility: visible !important;
+  display: flex !important;
+}
