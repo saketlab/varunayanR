@@ -1,6 +1,5 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://saketlab.github.io/varunayanR/404.html</loc></url>
-<url><loc>https://saketlab.github.io/varunayanR/CLAUDE.html</loc></url>
 <url><loc>https://saketlab.github.io/varunayanR/LICENSE-text.html</loc></url>
 <url><loc>https://saketlab.github.io/varunayanR/articles/era5-vs-imd-comparison.html</loc></url>
 <url><loc>https://saketlab.github.io/varunayanR/articles/index.html</loc></url>
@@ -95,6 +94,5 @@
 <url><loc>https://saketlab.github.io/varunayanR/reference/validate_era5_variables.html</loc></url>
 <url><loc>https://saketlab.github.io/varunayanR/reference/variable_lists.html</loc></url>
 <url><loc>https://saketlab.github.io/varunayanR/reference/varunayan-package.html</loc></url>
-<url><loc>https://saketlab.github.io/varunayanR/usage.html</loc></url>
 </urlset>
 

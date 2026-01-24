@@ -146,8 +146,6 @@ details.
 
 ------------------------------------------------------------------------
 
-**Made by [Saket Lab](https://saketlab.org)**
-
 # Package index
 
 ## Main Functions

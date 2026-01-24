@@ -145,5 +145,3 @@ MIT License - see
 details.
 
 ------------------------------------------------------------------------
-
-**Made by [Saket Lab](https://saketlab.org)**
