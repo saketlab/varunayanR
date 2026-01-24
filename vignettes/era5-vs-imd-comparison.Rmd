@@ -180,9 +180,9 @@ p1 + p2 + plot_layout(ncol = 2, guides = "collect") &
   theme(legend.position = "right")
 ```
 
-## Using Bharatviz API
+## Using BharatViz
 
-[Bharatviz](https://bharatviz.saketlab.org) provides a REST API for generating publication-ready choropleth maps of India.
+[BharatViz](https://bharatviz.saketlab.org) provides publication-ready choropleth maps of India.
 
 ```{r bharatviz_data}
 era5_api_data <- era5_states %>%
@@ -194,49 +194,20 @@ imd_api_data <- imd_states %>%
   transmute(state = state_name, value = round(value, 1))
 ```
 
-```{r bharatviz_api, fig.width=10, fig.height=6}
-library(httr)
+```{r bharatviz_maps, fig.width=10, fig.height=6}
+library(R6)
+library(gridExtra)
+source("https://raw.githubusercontent.com/saketlab/bharatviz/refs/heads/main/server/examples/bharatviz.R")
 
-bharatviz_map <- function(data, title = "", color_scale = "spectral", legend_title = "°C") {
-  data_list <- lapply(seq_len(nrow(data)), function(i) {
-    list(state = data$state[i], value = data$value[i])
-  })
+bv <- BharatViz$new()
 
-  response <- POST(
-    url = "https://bharatviz.saketlab.org/api/v1/states/map",
-    body = list(
-      data = data_list,
-      colorScale = color_scale,
-      title = title,
-      legendTitle = legend_title,
-      formats = list("png")
-    ),
-    encode = "json",
-    timeout(30)
-  )
+# Generate maps
+era5_result <- bv$generate_map(era5_api_data, title = "ERA5 Mean Temp (2023)", legend_title = "°C")
+imd_result <- bv$generate_map(imd_api_data, title = "IMD Mean Temp (2023)", legend_title = "°C")
 
-  if (status_code(response) == 200) {
-    result <- content(response)
-    if (isTRUE(result$success) && length(result$exports) > 0) {
-      base64_str <- result$exports[[1]]$data
-      img_data <- base64enc::base64decode(base64_str)
-      img <- png::readPNG(img_data)
-      return(grid::rasterGrob(img, interpolate = TRUE))
-    }
-  }
-  # Return empty grob on failure
-  grid::nullGrob()
-}
+# Display side by side
+era5_grob <- bv$get_grob(era5_result)
+imd_grob <- bv$get_grob(imd_result)
 
-era5_grob <- bharatviz_map(era5_api_data, title = "ERA5 Mean Temp (2023)")
-imd_grob <- bharatviz_map(imd_api_data, title = "IMD Mean Temp (2023)")
-
-grid::grid.newpage()
-grid::pushViewport(grid::viewport(layout = grid::grid.layout(1, 2)))
-grid::pushViewport(grid::viewport(layout.pos.col = 1))
-grid::grid.draw(era5_grob)
-grid::popViewport()
-grid::pushViewport(grid::viewport(layout.pos.col = 2))
-grid::grid.draw(imd_grob)
-grid::popViewport()
+grid.arrange(era5_grob, imd_grob, ncol = 2)
 ```
