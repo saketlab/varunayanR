@@ -5,7 +5,7 @@
 #' @import sf
 #' @import stars
 #' @importFrom data.table .SD .N .I .GRP .BY .EACHI := data.table as.data.table setDT setorder setnames year month
-#' @importFrom dplyr arrange group_by summarise select semi_join n
+#' @importFrom dplyr arrange group_by summarise select semi_join n across all_of bind_rows distinct mutate filter
 #' @importFrom digest digest
 #' @importFrom ecmwfr wf_set_key wf_request wf_get_key
 #' @importFrom httr GET POST content headers status_code timeout config

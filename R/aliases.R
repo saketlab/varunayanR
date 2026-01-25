@@ -72,9 +72,6 @@ ClearCache <- function(...) clear_cache(...)
 GetCacheDir <- function(...) get_cache_dir(...)
 
 # System utilities
-#' @rdname check_dependencies
-#' @export
-CheckDependencies <- function(...) check_dependencies(...)
 
 #' @rdname check_system_readiness
 #' @export

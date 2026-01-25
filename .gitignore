@@ -64,3 +64,5 @@ tests/testthat/_snaps/
 # *.nc
 # *.grib
 # *.zip
+/doc/
+/Meta/
