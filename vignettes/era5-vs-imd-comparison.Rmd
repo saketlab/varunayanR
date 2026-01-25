@@ -25,7 +25,9 @@ library(patchwork)
 ```{r download_geojson}
 districts_url <- "https://bharatviz.saketlab.org/India_LGD_districts.geojson"
 districts_file <- "indian_districts.geojson"
-if (!file.exists(districts_file)) download.file(districts_url, districts_file, mode = "wb")
+if (!file.exists(districts_file)) {
+  download.file(districts_url, districts_file, mode = "wb", timeout = 300)
+}
 districts_sf <- sf::st_read(districts_file, quiet = TRUE)
 ```
 
