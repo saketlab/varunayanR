@@ -23,6 +23,7 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      CDS_API_KEY: ${{ secrets.CDS_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4

@@ -3,36 +3,47 @@
 #' Set up CDS credentials for ERA5 data access
 #'
 #' This function helps users set up their Copernicus Climate Data Store (CDS) credentials
-#' for downloading ERA5 data. If no key is provided, it will attempt to read credentials
-#' from the standard ~/.cdsapirc file.
+#' for downloading ERA5 data. Credentials are checked in the following order:
+#' 1. Directly provided `key` argument
+#' 2. `CDS_API_KEY` environment variable
+#' 3. `~/.cdsapirc` file
 #'
-#' @param key Your CDS API key (UUID format). If NULL, attempts to read from ~/.cdsapirc
+#' @param key Your CDS API key (UUID format). If NULL, attempts to read from
+#'   environment variable `CDS_API_KEY` or ~/.cdsapirc file.
 #' @return Invisible TRUE if successful
 #' @export
 #' @examples
 #' \dontrun{
 #' setup_cds_credentials(key = "your-cds-api-key-here")
+#' Sys.setenv(CDS_API_KEY = "your-cds-api-key-here")
 #' setup_cds_credentials()
 #' }
 setup_cds_credentials <- function(key = NULL) {
   if (is.null(key)) {
-    message("No key provided, attempting to read from ~/.cdsapirc...")
-    creds <- read_cdsapirc()
+    env_key <- Sys.getenv("CDS_API_KEY", unset = "")
+    if (nzchar(env_key)) {
+      key <- env_key
+      message("Using CDS API key from CDS_API_KEY environment variable")
+    } else {
+      message("No key provided, attempting to read from ~/.cdsapirc...")
+      creds <- read_cdsapirc()
 
-    if (is.null(creds) || !"key" %in% names(creds)) {
-      stop(
-        "Could not read credentials from ~/.cdsapirc\n",
-        "Please either:\n",
-        "  1. Provide key directly: setup_cds_credentials(key = 'your-api-key')\n",
-        "  2. Create ~/.cdsapirc file with format:\n",
-        "     url: https://cds.climate.copernicus.eu/api\n",
-        "     key: your-api-key-here\n\n",
-        "Get your API key from: https://cds.climate.copernicus.eu/api-how-to"
-      )
+      if (is.null(creds) || !"key" %in% names(creds)) {
+        stop(
+          "Could not find CDS credentials.\n",
+          "Please provide credentials using one of these methods:\n",
+          "  1. Provide key directly: setup_cds_credentials(key = 'your-api-key')\n",
+          "  2. Set environment variable: Sys.setenv(CDS_API_KEY = 'your-api-key')\n",
+          "  3. Create ~/.cdsapirc file with format:\n",
+          "     url: https://cds.climate.copernicus.eu/api\n",
+          "     key: your-api-key-here\n\n",
+          "Get your API key from: https://cds.climate.copernicus.eu/how-to-api"
+        )
+      }
+
+      key <- creds$key
+      message("Found credentials in ~/.cdsapirc")
     }
-
-    key <- creds$key
-    message("Found credentials in ~/.cdsapirc")
   }
 
   suppressWarnings({
