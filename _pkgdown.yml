@@ -90,6 +90,8 @@ navbar:
         href: articles/quickstart.html
       - text: ERA5 vs IMD Comparison
         href: articles/era5-vs-imd-comparison.html
+      - text: Spatial Aggregation Methods
+        href: articles/spatial-aggregation.html
 
     news:
       text: Changelog

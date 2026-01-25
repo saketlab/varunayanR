@@ -11,19 +11,25 @@ SetupCdsCredentials(...)
 setup_cds_credentials(key = NULL)
 }
 \arguments{
-\item{key}{Your CDS API key (UUID format). If NULL, attempts to read from ~/.cdsapirc}
+\item{key}{Your CDS API key (UUID format). If NULL, attempts to read from
+environment variable \code{CDS_API_KEY} or ~/.cdsapirc file.}
 }
 \value{
 Invisible TRUE if successful
 }
 \description{
 This function helps users set up their Copernicus Climate Data Store (CDS) credentials
-for downloading ERA5 data. If no key is provided, it will attempt to read credentials
-from the standard ~/.cdsapirc file.
+for downloading ERA5 data. Credentials are checked in the following order:
+\enumerate{
+\item Directly provided \code{key} argument
+\item \code{CDS_API_KEY} environment variable
+\item \verb{~/.cdsapirc} file
+}
 }
 \examples{
 \dontrun{
 setup_cds_credentials(key = "your-cds-api-key-here")
+Sys.setenv(CDS_API_KEY = "your-cds-api-key-here")
 setup_cds_credentials()
 }
 }

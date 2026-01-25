@@ -127,22 +127,34 @@ ggplot(temp_wide, aes(x = IMD, y = ERA5)) +
   theme_minimal()
 ```
 
+## Grid Coverage Check
+
+```{r grid_coverage, fig.width=8, fig.height=6}
+imd_grid <- imd_tmax %>% distinct(longitude, latitude)
+coverage <- check_grid_coverage(imd_grid, districts_sf, c("state_name", "district_name"))
+cat(coverage$summary, "\n")
+```
+
+```{r grid_viz, fig.width=8, fig.height=6}
+visualize_grid_overlap(
+  imd_grid, districts_sf,
+  show_centroids = TRUE,
+  title = "IMD Grid Points vs District Boundaries"
+)
+```
+
 ## ERA5 vs IMD
 
 ```{r spatial_temp_maps, fig.width=8, fig.height=5}
-# Aggregate to district level
-join_to_districts <- function(data, value_col, districts) {
-  pts <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
-  st_join(districts, pts) %>%
-    as.data.frame() %>%
-    group_by(state_name, district_name) %>%
-    summarise(value = mean(.data[[value_col]], na.rm = TRUE), .groups = "drop")
-}
+# ERA5 mean temp by district (using nearest centroid for better coverage)
+era5_spatial <- era5_temp %>%
+  group_by(longitude, latitude) %>%
+  summarise(temp = mean(value, na.rm = TRUE), .groups = "drop")
 
-# ERA5 mean temp by district
-era5_districts <- join_to_districts(
-  era5_temp %>% group_by(longitude, latitude) %>% summarise(temp = mean(value, na.rm = TRUE), .groups = "drop"),
-  "temp", districts_sf
+era5_districts <- aggregate_to_polygons(
+  era5_spatial, districts_sf, "temp",
+  method = "nearest_centroid",
+  polygon_id_cols = c("state_name", "district_name")
 )
 
 # IMD mean temp by district: (Tmax + Tmin) / 2
@@ -157,7 +169,11 @@ imd_tmin_spatial <- imd_tmin %>%
 imd_mean_spatial <- inner_join(imd_tmax_spatial, imd_tmin_spatial, by = c("longitude", "latitude")) %>%
   mutate(temp = (tmax + tmin) / 2)
 
-imd_districts <- join_to_districts(imd_mean_spatial, "temp", districts_sf)
+imd_districts <- aggregate_to_polygons(
+  imd_mean_spatial, districts_sf, "temp",
+  method = "nearest_centroid",
+  polygon_id_cols = c("state_name", "district_name")
+)
 
 make_temp_map <- function(districts_sf, data, title, limits) {
   map_sf <- districts_sf %>% left_join(data, by = c("state_name", "district_name"))
