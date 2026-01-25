@@ -374,7 +374,7 @@ extract_zip_to_nc <- function(zip_file, output_dir) {
 
   nc_files <- list.files(temp_extract_dir, pattern = "\\.nc$", full.names = TRUE)
 
- if (length(x = nc_files) == 0) {
+  if (length(x = nc_files) == 0) {
     stop("No NetCDF files found in ZIP archive: ", zip_file)
   }
 

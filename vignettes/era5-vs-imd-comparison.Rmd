@@ -23,10 +23,10 @@ library(patchwork)
 ```
 
 ```{r download_geojson}
-states_url <- "https://bharatviz.saketlab.org/India_LGD_states.geojson"
-states_file <- "indian_states.geojson"
-if (!file.exists(states_file)) download.file(states_url, states_file, mode = "wb")
-states_sf <- sf::st_read(states_file, quiet = TRUE)
+districts_url <- "https://bharatviz.saketlab.org/India_LGD_districts.geojson"
+districts_file <- "indian_districts.geojson"
+if (!file.exists(districts_file)) download.file(districts_url, districts_file, mode = "wb")
+districts_sf <- sf::st_read(districts_file, quiet = TRUE)
 ```
 
 ## Download Data
@@ -37,7 +37,7 @@ era5_temp <- era5ify_geojson(
   variables = "2m_temperature",
   start_date = "2023-01-01",
   end_date = "2023-12-31",
-  json_file = states_file,
+  json_file = districts_file,
   frequency = "daily",
   resolution = 0.25
 ) %>%
@@ -48,7 +48,7 @@ era5_temp <- era5ify_geojson(
 imd_tmax <- imd_temperature_geojson(
   request_id = "imd_tmax_2023",
   start_year = 2023, end_year = 2023,
-  geojson_file = states_file,
+  geojson_file = districts_file,
   var_type = "tmax"
 ) %>% mutate(date = as.Date(date), var = "Tmax")
 ```
@@ -57,7 +57,7 @@ imd_tmax <- imd_temperature_geojson(
 imd_tmin <- imd_temperature_geojson(
   request_id = "imd_tmin_2023",
   start_year = 2023, end_year = 2023,
-  geojson_file = states_file,
+  geojson_file = districts_file,
   var_type = "tmin"
 ) %>% mutate(date = as.Date(date), var = "Tmin")
 ```
@@ -128,22 +128,22 @@ ggplot(temp_wide, aes(x = IMD, y = ERA5)) +
 ## ERA5 vs IMD
 
 ```{r spatial_temp_maps, fig.width=8, fig.height=5}
-# Aggregate to state level
-join_to_states <- function(data, value_col, states) {
+# Aggregate to district level
+join_to_districts <- function(data, value_col, districts) {
   pts <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
-  st_join(states, pts) %>%
+  st_join(districts, pts) %>%
     as.data.frame() %>%
-    group_by(state_name) %>%
+    group_by(state_name, district_name) %>%
     summarise(value = mean(.data[[value_col]], na.rm = TRUE), .groups = "drop")
 }
 
-# ERA5 mean temp by state
-era5_states <- join_to_states(
+# ERA5 mean temp by district
+era5_districts <- join_to_districts(
   era5_temp %>% group_by(longitude, latitude) %>% summarise(temp = mean(value, na.rm = TRUE), .groups = "drop"),
-  "temp", states_sf
+  "temp", districts_sf
 )
 
-# IMD mean temp by state: (Tmax + Tmin) / 2
+# IMD mean temp by district: (Tmax + Tmin) / 2
 imd_tmax_spatial <- imd_tmax %>%
   group_by(longitude, latitude) %>%
   summarise(tmax = mean(temperature, na.rm = TRUE), .groups = "drop")
@@ -155,12 +155,12 @@ imd_tmin_spatial <- imd_tmin %>%
 imd_mean_spatial <- inner_join(imd_tmax_spatial, imd_tmin_spatial, by = c("longitude", "latitude")) %>%
   mutate(temp = (tmax + tmin) / 2)
 
-imd_states <- join_to_states(imd_mean_spatial, "temp", states_sf)
+imd_districts <- join_to_districts(imd_mean_spatial, "temp", districts_sf)
 
-make_temp_map <- function(states_sf, data, title, limits) {
-  map_sf <- states_sf %>% left_join(data, by = "state_name")
+make_temp_map <- function(districts_sf, data, title, limits) {
+  map_sf <- districts_sf %>% left_join(data, by = c("state_name", "district_name"))
   ggplot(map_sf) +
-    geom_sf(aes(fill = value), color = "white", linewidth = 0.2) +
+    geom_sf(aes(fill = value), color = "white", linewidth = 0.1) +
     scale_fill_gradient2(
       low = "#2166AC", mid = "#F7F7F7", high = "#B2182B",
       midpoint = mean(limits),
@@ -171,10 +171,10 @@ make_temp_map <- function(states_sf, data, title, limits) {
     theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 11))
 }
 
-temp_limits <- range(c(era5_states$value, imd_states$value), na.rm = TRUE)
+temp_limits <- range(c(era5_districts$value, imd_districts$value), na.rm = TRUE)
 
-p1 <- make_temp_map(states_sf, era5_states, "ERA5", temp_limits)
-p2 <- make_temp_map(states_sf, imd_states, "IMD", temp_limits)
+p1 <- make_temp_map(districts_sf, era5_districts, "ERA5", temp_limits)
+p2 <- make_temp_map(districts_sf, imd_districts, "IMD", temp_limits)
 
 p1 + p2 + plot_layout(ncol = 2, guides = "collect") &
   theme(legend.position = "right")
@@ -185,13 +185,14 @@ p1 + p2 + plot_layout(ncol = 2, guides = "collect") &
 [BharatViz](https://bharatviz.saketlab.org) provides publication-ready choropleth maps of India.
 
 ```{r bharatviz_data}
-era5_api_data <- era5_states %>%
+# Prepare district-level data for BharatViz API
+era5_api_data <- era5_districts %>%
   filter(!is.na(value)) %>%
-  transmute(state = state_name, value = round(value, 1))
+  transmute(state = state_name, district = district_name, value = round(value, 1))
 
-imd_api_data <- imd_states %>%
+imd_api_data <- imd_districts %>%
   filter(!is.na(value)) %>%
-  transmute(state = state_name, value = round(value, 1))
+  transmute(state = state_name, district = district_name, value = round(value, 1))
 ```
 
 ```{r bharatviz_maps, fig.width=10, fig.height=6}
@@ -201,9 +202,19 @@ source("https://raw.githubusercontent.com/saketlab/bharatviz/refs/heads/main/ser
 
 bv <- BharatViz$new()
 
-# Generate maps
-era5_result <- bv$generate_map(era5_api_data, title = "ERA5 Mean Temp (2023)", legend_title = "°C")
-imd_result <- bv$generate_map(imd_api_data, title = "IMD Mean Temp (2023)", legend_title = "°C")
+# Generate district-level maps using LGD boundaries
+era5_result <- bv$generate_districts_map(
+  era5_api_data,
+  map_type = "LGD",
+  title = "ERA5 Mean Temp (2023)",
+  legend_title = "°C"
+)
+imd_result <- bv$generate_districts_map(
+  imd_api_data,
+  map_type = "LGD",
+  title = "IMD Mean Temp (2023)",
+  legend_title = "°C"
+)
 
 # Display side by side
 era5_grob <- bv$get_grob(era5_result)

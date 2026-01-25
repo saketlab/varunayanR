@@ -1,24 +1,67 @@
 url: https://saketlab.github.io/varunayanR/
 template:
   bootstrap: 5
-  bootswatch: flatly
+  light-switch: true
+  theme: github-light
+  theme-dark: github-dark
   bslib:
-    primary: "#0054a6"
-    secondary: "#00a651"
-    success: "#28a745"
-    info: "#17a2b8"
-    warning: "#ffc107"
-    danger: "#dc3545"
-    base_font: {google: "Roboto"}
-    heading_font: {google: "Roboto Slab"}
+    primary: "#0071e3"
+    border-radius: "0.5rem"
   includes:
     in_header: |
       <link rel="stylesheet" href="extra.css">
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-L78L5ESPGT"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-L78L5ESPGT');
+      </script>
+      <meta name="keywords" content="ERA5, IMD, climate data, R package, India weather, reanalysis, precipitation, temperature, NetCDF, climate analysis, Copernicus, ECMWF, Indian Meteorological Department, gridded data, monsoon, rainfall">
+      <meta name="author" content="Saket Choudhary">
+      <meta name="robots" content="index, follow">
+      <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+      <link rel="canonical" href="https://saketlab.github.io/varunayanR/">
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://saketlab.github.io/varunayanR/">
+      <meta property="og:title" content="varunayanR - ERA5 and IMD Climate Data for R">
+      <meta property="og:description" content="R package for downloading ERA5 reanalysis and IMD gridded climate data for India. Access temperature, precipitation, and weather variables for custom regions.">
+      <meta property="og:image" content="https://saketlab.github.io/varunayanR/logo.png">
+      <meta property="og:site_name" content="varunayanR">
+      <meta property="og:locale" content="en_US">
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="varunayanR - ERA5 and IMD Climate Data for R">
+      <meta name="twitter:description" content="R package for downloading ERA5 reanalysis and IMD gridded climate data for India.">
+      <meta name="twitter:image" content="https://saketlab.github.io/varunayanR/logo.png">
+      <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "varunayanR",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, macOS, Linux",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "R package for downloading and processing ERA5 reanalysis and IMD gridded climate data for India",
+        "author": {
+          "@type": "Person",
+          "name": "Saket Choudhary",
+          "url": "https://saketlab.org"
+        },
+        "url": "https://saketlab.github.io/varunayanR/",
+        "downloadUrl": "https://github.com/saketlab/varunayanR",
+        "softwareVersion": "0.1.0",
+        "programmingLanguage": "R"
+      }
+      </script>
 
 home:
-  title: "varunayanR"
+  title: "varunayanR - ERA5 and IMD climate data for R"
   description: >
-    Download and process ERA5 and IMD climate data for custom regions with analysis-ready outputs.
+    R package for downloading and processing ERA5 reanalysis and IMD gridded climate data.
 
   links:
   - text: Browse source code
@@ -29,7 +72,7 @@ home:
 navbar:
   structure:
     left:  [intro, reference, articles, tutorials, news]
-    right: [search, github, twitter]
+    right: [search, github, lightswitch]
 
   components:
     home:
@@ -43,8 +86,6 @@ navbar:
     articles:
       text: Articles
       menu:
-      - text: Getting Started
-        href: articles/getting-started.html
       - text: Quickstart Guide
         href: articles/quickstart.html
       - text: ERA5 vs IMD Comparison
@@ -60,14 +101,33 @@ navbar:
       aria-label: GitHub
 
 reference:
-- title: "Main Functions"
+- title: "ERA5 data functions"
+  desc: "Download ERA5 reanalysis data from Copernicus climate data store"
   contents:
   - starts_with("era5ify")
   - starts_with("ERA5ify")
+  - setup_cds_credentials
+
+- title: "IMD data functions"
+  desc: "Download gridded climate data from Indian Meteorological Department"
+  contents:
   - starts_with("imd_")
   - starts_with("IMD")
 
-- title: "All Other Functions"
+- title: "Variable discovery"
+  desc: "Search and explore available climate variables"
+  contents:
+  - search_variable
+  - describe_variables
+  - list_available_variables
+
+- title: "Cache management"
+  desc: "Manage downloaded data cache"
+  contents:
+  - show_cache_info
+  - clear_cache
+
+- title: "All other functions"
   contents:
   - lacks_concepts(c("internal"))
 

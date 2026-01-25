@@ -1,0 +1,130 @@
+---
+title: "Quickstart Guide"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quickstart Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(varunayan)
+```
+
+## ERA5 Data
+
+ERA5 provides global climate reanalysis data. Requires [CDS API credentials](https://cds.climate.copernicus.eu/how-to-api).
+
+```{r era5-setup, eval=FALSE}
+# One-time setup
+setup_cds_credentials(key = "your-personal-access-token")
+```
+
+### Bounding Box
+
+```{r era5-bbox, eval=FALSE}
+df <- era5ify_bbox(
+  request_id = "mumbai_temp",
+  variables = c("2m_temperature", "total_precipitation"),
+  start_date = "2024-01-01",
+  end_date = "2024-01-31",
+  north = 20, south = 18, east = 74, west = 72,
+  frequency = "daily"
+)
+```
+
+### GeoJSON Region
+
+```{r era5-geojson, eval=FALSE}
+df <- era5ify_geojson(
+  request_id = "india_weather",
+  variables = c("2m_temperature"),
+  start_date = "2024-01-01",
+  end_date = "2024-01-07",
+  json_file = "india.geojson",
+  frequency = "daily"
+)
+```
+
+### Point Location
+
+```{r era5-point, eval=FALSE}
+df <- era5ify_point(
+  request_id = "delhi_temp",
+  variables = c("2m_temperature"),
+  start_date = "2024-01-01",
+  end_date = "2024-01-31",
+  lat = 28.6139, lon = 77.2090,
+  frequency = "daily"
+)
+```
+
+## IMD Data
+
+IMD provides high-resolution gridded data for India. No credentials required.
+
+### Rainfall
+
+```{r imd-rainfall, eval=FALSE}
+# 0.25 degree resolution rainfall
+df <- imd_rainfall_bbox(
+  request_id = "maharashtra_rain",
+  start_year = 2023,
+  end_year = 2023,
+  north = 22, south = 16, east = 80, west = 73,
+  resolution = 0.25,
+  frequency = "monthly"
+)
+```
+
+### Temperature
+
+```{r imd-temperature, eval=FALSE}
+# Maximum temperature
+df <- imd_temperature_bbox(
+  request_id = "delhi_tmax",
+  start_year = 2023,
+  end_year = 2023,
+  north = 30, south = 27, east = 78, west = 76,
+  var_type = "tmax"
+)
+```
+
+### GeoJSON Region
+
+```{r imd-geojson, eval=FALSE}
+df <- imd_rainfall_geojson(
+  request_id = "kerala_rain",
+  start_year = 2023,
+  end_year = 2023,
+  geojson_file = "kerala.geojson",
+  resolution = 0.25
+)
+```
+
+## Variable Discovery
+
+```{r variables, message=FALSE}
+# Search variables
+search_variable("temperature")
+
+# Get descriptions
+describe_variables(c("2m_temperature", "total_precipitation"))
+
+# List all
+head(list_available_variables("single"), 10)
+```
+
+## Cache Management
+
+```{r cache, message=FALSE}
+# View cache
+show_cache_info()
+```

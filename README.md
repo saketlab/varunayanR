@@ -5,12 +5,10 @@
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**varunayanR** is an R package for downloading and processing **ERA5 reanalysis** data from [Copernicus Climate Data Store](https://cds.climate.copernicus.eu/) and **IMD gridded climate data** from the [Indian Meteorological Department](https://www.imdpune.gov.in/). 
+It provides an easy to use R interface for extracting temperature, precipitation, and other climate variables for any region using bounding boxes, GeoJSON polygons, or point coordinates.
 
-varunayanR makes it effortless to download and process **ERA5** reanalysis and **IMD** gridded climate data for any geographical region. Get analysis-ready data frames with just a few lines of code.
-
-## Quick Start
-
-### Installation
+## Installation
 
 ```r
 # Install from GitHub
@@ -18,16 +16,18 @@ varunayanR makes it effortless to download and process **ERA5** reanalysis and *
 devtools::install_github("saketlab/varunayanR")
 ```
 
-### Basic Usage
+## Quick Start
+
+### ERA5 climate data
 
 ```r
 library(varunayan)
 
-# 1. Setup CDS credentials (ERA5 only, one-time)
+# Setup CDS credentials (one-time)
+# Get your API key from: https://cds.climate.copernicus.eu/how-to-api
 setup_cds_credentials(key = "your-cds-api-key")
-# Get your key from: https://cds.climate.copernicus.eu/api-how-to
 
-# 2. Download ERA5 data for a bounding box
+# Download ERA5 temperature and precipitation for Mumbai
 temperature_data <- era5ify_bbox(
   request_id = "mumbai_temp",
   variables = c("2m_temperature", "total_precipitation"),
@@ -38,7 +38,13 @@ temperature_data <- era5ify_bbox(
   frequency = "daily"
 )
 
-# 3. Download IMD rainfall data
+head(temperature_data)
+```
+
+### IMD rainfall data
+
+```r
+# Download IMD gridded rainfall data for Maharashtra
 rainfall_data <- imd_rainfall_bbox(
   request_id = "maharashtra_rain",
   start_year = 2023,
@@ -48,19 +54,12 @@ rainfall_data <- imd_rainfall_bbox(
   resolution = 0.25,
   frequency = "monthly"
 )
-
-# Data is ready to analyze!
-head(temperature_data)
-#>         date latitude longitude 2m_temperature total_precipitation
-#> 1 2023-01-01   19.000    72.750         293.15                0.0
-#> 2 2023-01-01   19.000    72.875         293.20                0.5
-#> ...
 ```
 
-### Download Data for Custom GeoJSON Region
+### GeoJSON regions
 
 ```r
-# Use any GeoJSON file
+# Download data for regions defined by GeoJSON
 data <- era5ify_geojson(
   request_id = "indian_states",
   variables = c("2m_temperature", "surface_pressure"),
@@ -71,10 +70,12 @@ data <- era5ify_geojson(
 )
 ```
 
-### Multi-Year IMD Analysis
+## Use cases
+
+### Monsoon analysis
 
 ```r
-# Download 20 years of rainfall data
+# Download 20 years of rainfall data for monsoon research
 rainfall <- imd_rainfall_bbox(
   request_id = "monsoon_study",
   start_year = 2000,
@@ -85,7 +86,7 @@ rainfall <- imd_rainfall_bbox(
   frequency = "monthly"
 )
 
-# Analyze monsoon patterns
+# Analyze monsoon patterns (June-September)
 library(dplyr)
 monsoon <- rainfall %>%
   filter(month(date) %in% 6:9) %>%
@@ -93,10 +94,10 @@ monsoon <- rainfall %>%
   summarise(monsoon_total = sum(rainfall))
 ```
 
-### Pressure-level data
+### Atmospheric data at pressure levels
 
 ```r
-# Download ERA5 atmospheric data at multiple levels
+# Download ERA5 data at multiple atmospheric levels
 atmos_data <- era5ify_bbox(
   request_id = "atmosphere",
   variables = c("temperature", "geopotential", "u_component_of_wind"),
@@ -109,28 +110,17 @@ atmos_data <- era5ify_bbox(
 )
 ```
 
+## Documentation
+
+- [Quickstart Guide](https://saketlab.github.io/varunayanR/articles/quickstart.html)
+- [ERA5 vs IMD Comparison](https://saketlab.github.io/varunayanR/articles/era5-vs-imd-comparison.html)
+- [Function Reference](https://saketlab.github.io/varunayanR/reference/index.html)
+
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-## Citation
-
-If you use varunayanR in your research, please cite:
-
-```bibtex
-@software{varunayanr2024,
-  author = {Jagtap, Atharva and Choudhary, Saket},
-  title = {varunayanR: Analysis-ready Climate Data for Custom Regions},
-  year = {2024},
-  url = {https://github.com/saketlab/varunayanR},
-  version = {0.1.0}
-}
-```
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
-
-
----
-
