@@ -1,4 +1,16 @@
 #' Utility functions for Varunayan R package
+#'
+#' @name varunayan-utils
+#' @importFrom stats aggregate as.formula complete.cases setNames
+#' @importFrom utils setTxtProgressBar txtProgressBar write.csv
+#' @importFrom graphics grid
+NULL
+
+# Suppress R CMD check NOTEs for dplyr NSE variables
+utils::globalVariables(c(
+  ".", "..value_col", "datetime", "latitude", "longitude",
+  "time_group", "value", "variable"
+))
 
 # Package environment for timing data
 .varunayan_env <- new.env(parent = emptyenv())

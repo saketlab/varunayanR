@@ -38,6 +38,8 @@ download_era5_single(
 \item{retry_attempts}{Integer number of retry attempts (default: 2)}
 
 \item{use_cache}{Use cached data if available (default: TRUE)}
+
+\item{verbose}{Logical indicating whether to print progress messages}
 }
 \value{
 Character string path to downloaded file

@@ -69,6 +69,7 @@ setup_cds_credentials <- function(key = NULL) {
 #' @param timeout Numeric value for request timeout in seconds (default: 3600)
 #' @param retry_attempts Integer number of retry attempts (default: 2)
 #' @param use_cache Use cached data if available (default: TRUE)
+#' @param verbose Logical indicating whether to print progress messages
 #' @return Character string path to downloaded file
 download_era5_single <- function(variables, start_date, end_date, area = NULL,
                                  resolution = 0.25, frequency = "hourly", output_file,
@@ -241,6 +242,7 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
 #' @param frequency Character string: "hourly", "daily", "monthly"
 #' @param output_file Character string path for output NetCDF file
 #' @param use_cache Use cached data if available (default: TRUE)
+#' @param verbose Logical indicating whether to print progress messages
 #' @return Character string path to downloaded file
 download_era5_pressure <- function(variables, pressure_levels, start_date, end_date,
                                    area = NULL, resolution = 0.25, frequency = "hourly",

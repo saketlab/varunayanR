@@ -8,6 +8,8 @@ combine_netcdf_files(netcdf_files, verbose = FALSE)
 }
 \arguments{
 \item{netcdf_files}{Character vector of NetCDF file paths}
+
+\item{verbose}{Logical indicating whether to print progress messages}
 }
 \value{
 data.frame with combined data from all files

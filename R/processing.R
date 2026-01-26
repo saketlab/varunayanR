@@ -364,6 +364,7 @@ extract_point_data <- function(netcdf_file, target_lat, target_lon) {
 #'
 #' @param data data.frame with datetime column
 #' @param frequency Character string: "daily", "monthly", "yearly"
+#' @param verbose Logical indicating whether to print progress messages
 #' @return data.frame with temporally aggregated data
 aggregate_by_frequency <- function(data, frequency, verbose = FALSE) {
   if (!"datetime" %in% names(data)) {
@@ -478,6 +479,7 @@ create_temporal_chunks <- function(start_date, end_date, frequency, max_days_per
 #' Combine multiple NetCDF files into single data.frame
 #'
 #' @param netcdf_files Character vector of NetCDF file paths
+#' @param verbose Logical indicating whether to print progress messages
 #' @return data.frame with combined data from all files
 combine_netcdf_files <- function(netcdf_files, verbose = FALSE) {
   valid_files <- netcdf_files[file.exists(netcdf_files)]

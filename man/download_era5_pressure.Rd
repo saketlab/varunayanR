@@ -35,6 +35,8 @@ download_era5_pressure(
 \item{output_file}{Character string path for output NetCDF file}
 
 \item{use_cache}{Use cached data if available (default: TRUE)}
+
+\item{verbose}{Logical indicating whether to print progress messages}
 }
 \value{
 Character string path to downloaded file

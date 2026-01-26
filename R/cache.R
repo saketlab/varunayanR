@@ -289,9 +289,9 @@ populate_sample_cache <- function(force = FALSE) {
   message("Populating cache with sample IMD data...")
 
   samples <- list(
-    list(file = "rain_2024.nc", var_type = "rainfall", res = 0.25, desc = "Rainfall 0.25° (2024)"),
-    list(file = "tmax_2024.grd", var_type = "tmax", res = 1.0, desc = "Max Temp 1.0° (2024)"),
-    list(file = "tmin_2024.grd", var_type = "tmin", res = 1.0, desc = "Min Temp 1.0° (2024)")
+    list(file = "rain_2024.nc", var_type = "rainfall", res = 0.25, desc = "Rainfall 0.25\u00B0 (2024)"),
+    list(file = "tmax_2024.grd", var_type = "tmax", res = 1.0, desc = "Max Temp 1.0\u00B0 (2024)"),
+    list(file = "tmin_2024.grd", var_type = "tmin", res = 1.0, desc = "Min Temp 1.0\u00B0 (2024)")
   )
 
   cached_files <- list()

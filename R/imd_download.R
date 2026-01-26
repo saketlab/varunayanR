@@ -30,7 +30,7 @@ download_imd_rainfall <- function(start_year, end_year, resolution = 0.25, outpu
 
   endpoint <- if (resolution == 0.25) list(php = "RF25.php", param = "RF25") else list(php = "rain.php", param = "rain")
 
-  message(sprintf(fmt = "Downloading IMD rainfall data (resolution: %s°)", resolution))
+  message(sprintf(fmt = "Downloading IMD rainfall data (resolution: %s\u00B0)", resolution))
   message(sprintf(fmt = "Years: %s to %s", start_year, end_year))
 
   ensure_output_dir(output_dir)
@@ -187,7 +187,7 @@ download_imd_temperature <- function(start_year, end_year, var_type = "tmax", ou
 
   endpoint <- if (var_type == "tmax") list(php = "maxtemp.php", param = "maxtemp") else list(php = "mintemp.php", param = "mintemp")
 
-  message(sprintf(fmt = "Downloading IMD %s data (resolution: 1.0°)", var_type))
+  message(sprintf(fmt = "Downloading IMD %s data (resolution: 1.0\u00B0)", var_type))
   message(sprintf(fmt = "Years: %s to %s", start_year, end_year))
 
   ensure_output_dir(output_dir)
