@@ -1,4 +1,5 @@
 url: https://saketlab.github.io/varunayanR/
+logo: pkgdown/varunayan_logo.png
 template:
   bootstrap: 5
   light-switch: true
