@@ -187,6 +187,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
 #'   When TRUE, temperature variables are returned in Celsius (converted from Kelvin)
 #'   and precipitation variables are returned in mm (converted from meters).
 #' @param verbose Whether to print detailed progress messages
+#' @param ... Arguments passed to the main function (used by aliases).
 #'
 #' @return data.frame with processed climate data. When `convert_units = TRUE`:
 #'   \itemize{
@@ -275,6 +276,7 @@ era5ify_geojson <- function(request_id, variables, start_date, end_date, json_fi
 #'   When TRUE, temperature variables are returned in Celsius (converted from Kelvin)
 #'   and precipitation variables are returned in mm (converted from meters).
 #' @param verbose Whether to print detailed progress messages.
+#' @param ... Arguments passed to the main function (used by aliases).
 #'
 #' @return data.frame with processed climate data. When `convert_units = TRUE`:
 #'   \itemize{
@@ -361,6 +363,7 @@ era5ify_bbox <- function(request_id, variables, start_date, end_date,
 #'   When TRUE, temperature variables are returned in Celsius (converted from Kelvin)
 #'   and precipitation variables are returned in mm (converted from meters).
 #' @param verbose Whether to print detailed progress messages.
+#' @param ... Arguments passed to the main function (used by aliases).
 #'
 #' @return data.frame with processed climate data. When `convert_units = TRUE`:
 #'   \itemize{

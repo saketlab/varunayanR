@@ -15,6 +15,8 @@
 #' @param frequency Temporal frequency: "daily", "monthly", "yearly" (default: "daily").
 #' @param save_raw Whether to save raw downloaded files (default: FALSE).
 #' @param output_dir Directory to save files (default: tempdir()).
+#' @param use_cache Whether to use cached data if available (default: TRUE).
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return data.frame with processed rainfall data
 #' @export
 #' @examples
@@ -102,6 +104,8 @@ imd_rainfall_bbox <- function(request_id, start_year, end_year,
 #' @param frequency Temporal frequency (default: "daily").
 #' @param save_raw Whether to save raw files (default: FALSE).
 #' @param output_dir Directory to save files (default: tempdir()).
+#' @param use_cache Whether to use cached data if available (default: TRUE).
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return data.frame with processed rainfall data
 #' @export
 imd_rainfall_geojson <- function(request_id, start_year, end_year, geojson_file,
@@ -186,6 +190,8 @@ imd_rainfall_geojson <- function(request_id, start_year, end_year, geojson_file,
 #' @param frequency Temporal frequency (default: "daily").
 #' @param save_raw Whether to save raw files (default: FALSE).
 #' @param output_dir Directory to save files (default: tempdir()).
+#' @param use_cache Whether to use cached data if available (default: TRUE).
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return data.frame with processed temperature data
 #' @export
 #' @examples
@@ -270,6 +276,8 @@ imd_temperature_bbox <- function(request_id, start_year, end_year,
 #' @param frequency Temporal frequency (default: "daily").
 #' @param save_raw Whether to save raw files (default: FALSE).
 #' @param output_dir Directory for output (default: tempdir()).
+#' @param use_cache Whether to use cached data if available (default: TRUE).
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return data.frame with processed temperature data
 #' @export
 imd_temperature_geojson <- function(request_id, start_year, end_year, geojson_file,

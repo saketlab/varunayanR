@@ -33,7 +33,7 @@
     has_creds <- tryCatch(
       {
         key <- wf_get_key()
-        !is.null(object = key) && nchar(x = key) > 0
+        !is.null(key) && nchar(key) > 0
       },
       error = function(e) FALSE
     )

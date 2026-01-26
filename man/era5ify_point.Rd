@@ -25,6 +25,8 @@ era5ify_point(
 )
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{request_id}{Unique identifier for the data request.}
 
 \item{variables}{List of ERA5 variables to download.}

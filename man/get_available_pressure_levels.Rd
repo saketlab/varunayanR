@@ -9,6 +9,9 @@ GetAvailablePressureLevels(...)
 
 get_available_pressure_levels()
 }
+\arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+}
 \value{
 Character vector of pressure levels in hPa
 }

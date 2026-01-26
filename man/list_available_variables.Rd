@@ -10,6 +10,8 @@ ListAvailableVariables(...)
 list_available_variables(dataset_type = "all")
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{dataset_type}{Character string indicating dataset type}
 }
 \value{

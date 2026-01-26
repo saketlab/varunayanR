@@ -1,6 +1,7 @@
 #' PascalCase Aliases
 #'
 #' PascalCase aliases for all exported functions for backward compatibility.
+#' @name varunayan-aliases
 
 # ERA5 functions
 #' @rdname era5ify_geojson

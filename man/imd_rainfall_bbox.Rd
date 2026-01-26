@@ -24,6 +24,8 @@ imd_rainfall_bbox(
 )
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{request_id}{Unique identifier for the request.}
 
 \item{start_year}{Start year.}
@@ -45,6 +47,8 @@ imd_rainfall_bbox(
 \item{save_raw}{Whether to save raw downloaded files (default: FALSE).}
 
 \item{output_dir}{Directory to save files (default: tempdir()).}
+
+\item{use_cache}{Whether to use cached data if available (default: TRUE).}
 }
 \value{
 data.frame with processed rainfall data

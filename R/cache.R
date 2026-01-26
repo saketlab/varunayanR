@@ -5,6 +5,7 @@
 #' Get cache directory path
 #'
 #' @param create Create directory if it doesn't exist (default: TRUE)
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return Character string with cache directory path
 #' @export
 get_cache_dir <- function(create = TRUE) {
@@ -142,6 +143,7 @@ list_cache <- function(source = NULL) {
 #' @param source Clear only "era5", "imd", or NULL for all
 #' @param older_than Remove files older than this many days (NULL = all)
 #' @param confirm Ask for confirmation (default: TRUE)
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return Number of files deleted (invisible)
 #' @export
 clear_cache <- function(source = NULL, older_than = NULL, confirm = TRUE) {
@@ -265,6 +267,7 @@ show_cache_info <- function() {
 #' Copies sample IMD data files to cache for offline testing.
 #'
 #' @param force Overwrite existing cached files (default: FALSE)
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return List of cached files (invisible)
 #' @export
 populate_sample_cache <- function(force = FALSE) {

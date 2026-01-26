@@ -10,6 +10,8 @@ PopulateSampleCache(...)
 populate_sample_cache(force = FALSE)
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{force}{Overwrite existing cached files (default: FALSE)}
 }
 \value{

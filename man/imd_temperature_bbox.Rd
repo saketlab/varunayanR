@@ -23,6 +23,8 @@ imd_temperature_bbox(
 )
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{request_id}{Unique identifier for the request.}
 
 \item{start_year}{Start year (1951-2024).}
@@ -44,6 +46,8 @@ imd_temperature_bbox(
 \item{save_raw}{Whether to save raw files (default: FALSE).}
 
 \item{output_dir}{Directory to save files (default: tempdir()).}
+
+\item{use_cache}{Whether to use cached data if available (default: TRUE).}
 }
 \value{
 data.frame with processed temperature data

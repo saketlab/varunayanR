@@ -177,6 +177,7 @@ cleanup_temp_files <- function(pattern = "varunayan_.*", directory = tempdir()) 
 }
 
 #' Get package version information
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return data.frame with package versions (invisible)
 #' @export
 get_package_info <- function() {

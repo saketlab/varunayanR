@@ -11,6 +11,8 @@ SearchVariable(...)
 search_variable(keyword, dataset_type = "all", exact_match = FALSE)
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{keyword}{Character string to search for in variable names and descriptions}
 
 \item{dataset_type}{Character string indicating dataset type ("single", "pressure", or "all")}
