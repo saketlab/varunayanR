@@ -59,10 +59,9 @@ rsconnect/
 # Test outputs
 tests/testthat/_snaps/
 
-# Downloaded data files (if you don't want to track them)
-# Uncomment these if you want to ignore downloaded ERA5/IMD data
-# *.nc
-# *.grib
-# *.zip
+*.nc
+*.grib
+*.zip
 /doc/
 /Meta/
+*.geojson
