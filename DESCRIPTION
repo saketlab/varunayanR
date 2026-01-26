@@ -42,7 +42,8 @@ Suggests:
     scales,
     tidyr,
     units,
-    R.utils
+    R.utils,
+    gridExtra
 VignetteBuilder: knitr
 Encoding: UTF-8
 LazyData: true
