@@ -213,7 +213,7 @@ imd_api_data <- imd_districts %>%
   transmute(state = state_name, district = district_name, value = round(value, 1))
 ```
 
-```{r bharatviz_maps, fig.width=10, fig.height=6, eval=FALSE}
+```{r bharatviz_maps, fig.width=10, fig.height=6}
 # not run in knit mode
 library(R6)
 library(gridExtra)
