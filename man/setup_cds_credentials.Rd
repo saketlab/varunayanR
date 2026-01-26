@@ -11,6 +11,8 @@ SetupCdsCredentials(...)
 setup_cds_credentials(key = NULL)
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{key}{Your CDS API key (UUID format). If NULL, attempts to read from
 environment variable \code{CDS_API_KEY} or ~/.cdsapirc file.}
 }

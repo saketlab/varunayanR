@@ -9,6 +9,9 @@ ShowCacheInfo(...)
 
 show_cache_info()
 }
+\arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+}
 \value{
 data.frame with cache information (invisible)
 }

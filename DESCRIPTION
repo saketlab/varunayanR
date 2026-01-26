@@ -13,7 +13,7 @@ Description: R package for downloading and processing ERA5 climate data and IMD
 License: MIT + file LICENSE
 URL: https://github.com/saketlab/varunayanR
 BugReports: https://github.com/saketlab/varunayanR/issues
-Depends: 
+Depends:
     R (>= 4.1.0)
 Imports:
     data.table,
@@ -21,7 +21,6 @@ Imports:
     sf,
     stars,
     ncdf4,
-    ncmeta,
     dplyr,
     lubridate,
     jsonlite,
@@ -46,6 +45,5 @@ Suggests:
     gridExtra
 VignetteBuilder: knitr
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

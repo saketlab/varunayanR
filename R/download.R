@@ -10,6 +10,7 @@
 #'
 #' @param key Your CDS API key (UUID format). If NULL, attempts to read from
 #'   environment variable `CDS_API_KEY` or ~/.cdsapirc file.
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return Invisible TRUE if successful
 #' @export
 #' @examples

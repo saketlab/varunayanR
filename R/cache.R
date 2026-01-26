@@ -220,6 +220,7 @@ cache_stats <- function() {
 }
 
 #' Show cache contents and statistics
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return data.frame with cache information (invisible)
 #' @export
 show_cache_info <- function() {
