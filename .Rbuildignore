@@ -4,4 +4,6 @@
 ^Meta$
 ^_pkgdown\.yml$
 ^pkgdown$
-^\.github$
+^\..*$
+^inst/doc$
+^docs$
