@@ -10,6 +10,8 @@ CheckSystemReadiness(...)
 check_system_readiness(verbose = TRUE)
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{verbose}{Whether to print detailed information}
 }
 \value{

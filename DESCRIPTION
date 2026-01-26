@@ -42,7 +42,8 @@ Suggests:
     tidyr,
     units,
     R.utils,
-    gridExtra
+    gridExtra,
+    ncmeta
 VignetteBuilder: knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

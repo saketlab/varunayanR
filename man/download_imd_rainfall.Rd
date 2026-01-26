@@ -20,6 +20,8 @@ download_imd_rainfall(
 \item{resolution}{Spatial resolution: 0.25 or 1.0 degrees.}
 
 \item{output_dir}{Directory to save downloaded files.}
+
+\item{use_cache}{Whether to use cached data if available (default: TRUE).}
 }
 \value{
 Character vector of downloaded file paths

@@ -200,6 +200,7 @@ get_package_info <- function() {
 #' Check system readiness for varunayan operations
 #'
 #' @param verbose Whether to print detailed information
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return Logical indicating if system is ready (invisible)
 #' @export
 check_system_readiness <- function(verbose = TRUE) {

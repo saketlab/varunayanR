@@ -20,6 +20,8 @@ download_imd_temperature(
 \item{var_type}{Type of temperature: "tmax" or "tmin".}
 
 \item{output_dir}{Directory to save downloaded files.}
+
+\item{use_cache}{Whether to use cached data if available (default: TRUE).}
 }
 \value{
 Character vector of downloaded file paths

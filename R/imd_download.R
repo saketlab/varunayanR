@@ -11,6 +11,7 @@
 #' @param end_year End year.
 #' @param resolution Spatial resolution: 0.25 or 1.0 degrees.
 #' @param output_dir Directory to save downloaded files.
+#' @param use_cache Whether to use cached data if available (default: TRUE).
 #' @return Character vector of downloaded file paths
 #' @export
 #' @examples
@@ -168,6 +169,7 @@ download_imd_rainfall <- function(start_year, end_year, resolution = 0.25, outpu
 #' @param end_year End year.
 #' @param var_type Type of temperature: "tmax" or "tmin".
 #' @param output_dir Directory to save downloaded files.
+#' @param use_cache Whether to use cached data if available (default: TRUE).
 #' @return Character vector of downloaded file paths
 #' @export
 #' @examples
