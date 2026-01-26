@@ -2,8 +2,7 @@ url: https://saketlab.github.io/varunayanR/
 template:
   bootstrap: 5
   light-switch: true
-  theme: github-light
-  theme-dark: github-dark
+  preset: default
   bslib:
     primary: "#0071e3"
     border-radius: "0.5rem"
