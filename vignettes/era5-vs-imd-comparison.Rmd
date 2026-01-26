@@ -213,14 +213,14 @@ imd_api_data <- imd_districts %>%
   transmute(state = state_name, district = district_name, value = round(value, 1))
 ```
 
-```{r bharatviz_maps, fig.width=10, fig.height=6}
+```{r bharatviz_maps, fig.width=10, fig.height=6, eval=FALSE}
+# not run in knit mode
 library(R6)
 library(gridExtra)
 source("https://raw.githubusercontent.com/saketlab/bharatviz/refs/heads/main/server/examples/bharatviz.R")
 
 bv <- BharatViz$new()
 
-# Generate district-level maps using LGD boundaries
 era5_result <- bv$generate_districts_map(
   era5_api_data,
   map_type = "LGD",
@@ -234,7 +234,6 @@ imd_result <- bv$generate_districts_map(
   legend_title = "°C"
 )
 
-# Display side by side
 era5_grob <- bv$get_grob(era5_result)
 imd_grob <- bv$get_grob(imd_result)
 
