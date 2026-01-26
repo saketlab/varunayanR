@@ -1,5 +1,4 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
     branches: [main, master]
@@ -11,7 +10,6 @@ name: R-CMD-check
 permissions: read-all
 
 jobs:
-  # Fast checks that should fail quickly
   quick-check:
     runs-on: ubuntu-latest
     name: Quick checks (Ubuntu, R-release)
@@ -36,14 +34,12 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      # Run R CMD check without building vignettes for fast feedback
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual", "--no-build-vignettes")'
           args: 'c("--no-manual", "--as-cran", "--no-build-vignettes")'
 
-  # Full matrix check without vignettes (runs after quick-check passes)
   R-CMD-check:
     needs: quick-check
     runs-on: ${{ matrix.config.os }}
@@ -85,7 +81,6 @@ jobs:
           build_args: 'c("--no-manual", "--no-build-vignettes")'
           args: 'c("--no-manual", "--as-cran", "--no-build-vignettes")'
 
-  # Vignette building (only runs if all checks pass)
   build-vignettes:
     needs: R-CMD-check
     runs-on: ubuntu-latest
