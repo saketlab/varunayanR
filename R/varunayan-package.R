@@ -5,16 +5,16 @@
 #' @import sf
 #' @import stars
 #' @importFrom data.table .SD .N .I .GRP .BY .EACHI := data.table as.data.table setDT setorder setnames year month
-#' @importFrom dplyr arrange group_by summarise select semi_join n across all_of bind_rows distinct mutate filter
+#' @importFrom dplyr arrange group_by summarise select semi_join inner_join n across all_of bind_rows distinct mutate filter
 #' @importFrom digest digest
 #' @importFrom ecmwfr wf_set_key wf_request wf_get_key
+#' @importFrom terra rast extract
 #' @importFrom httr GET POST content headers status_code timeout config
 #' @importFrom jsonlite fromJSON toJSON write_json
 #' @importFrom lubridate ymd
 #' @importFrom magrittr "%>%"
 #' @importFrom ncdf4 nc_open nc_close ncvar_get
 #' @importFrom rlang .data
-#' @importFrom terra rast extract
 #' @importFrom tools R_user_dir file_ext file_path_sans_ext
 #' @importFrom utils unzip sessionInfo packageVersion install.packages
 ## usethis namespace: end

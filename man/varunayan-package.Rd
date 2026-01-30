@@ -6,6 +6,8 @@
 \alias{varunayan-package}
 \title{varunayan: Package for downloading and processing climatic variables from ERA5 and IMD}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 R package for downloading and processing ERA5 climate data and IMD (Indian Meteorological Department) gridded data for custom geographical regions. Provides functions to extract climate data using bounding boxes, GeoJSON polygons, or point coordinates. Supports various temporal frequencies and spatial resolutions with analysis-ready outputs.
 }
 \seealso{
