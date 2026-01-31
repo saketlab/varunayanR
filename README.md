@@ -1,8 +1,6 @@
 # varunayanR <img src="man/figures/logo.png" align="right" height="139" alt="varunayanR logo" />
 
 [![R-CMD-check](https://github.com/saketlab/varunayanR/workflows/R-CMD-check/badge.svg)](https://github.com/saketlab/varunayanR/actions)
-[![CRAN status](https://www.r-pkg.org/badges/version/varunayan)](https://CRAN.R-project.org/package=varunayan)
-[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **varunayanR** is an R package for downloading and processing **ERA5 reanalysis** data from [Copernicus Climate Data Store](https://cds.climate.copernicus.eu/) and **IMD gridded climate data** from the [Indian Meteorological Department](https://www.imdpune.gov.in/). 
