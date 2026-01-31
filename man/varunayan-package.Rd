@@ -13,6 +13,7 @@ R package for downloading and processing ERA5 climate data and IMD (Indian Meteo
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://saketlab.github.io/varunayanR}
   \item \url{https://github.com/saketlab/varunayanR}
   \item Report bugs at \url{https://github.com/saketlab/varunayanR/issues}
 }

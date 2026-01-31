@@ -11,7 +11,7 @@ Description: R package for downloading and processing ERA5 climate data and IMD
     or point coordinates and calculate heat indices. Supports various temporal frequencies and spatial resolutions
     with analysis-ready outputs.
 License: MIT + file LICENSE
-URL: https://github.com/saketlab/varunayanR
+URL: https://saketlab.github.io/varunayanR, https://github.com/saketlab/varunayanR
 BugReports: https://github.com/saketlab/varunayanR/issues
 Depends:
     R (>= 4.1.0)
