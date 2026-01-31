@@ -1194,12 +1194,14 @@ GetERA5DailyHeatIndexData <- function(request_id, start_date, end_date,
   if (solar_load) {
     heat_data <- climate_data %>%
       mutate(
+        # Convert solar radiation from J/m²/day to W/m² (average power)
+        solar_radiation_wm2 = .data$solar_radiation / 86400,
         wet_bulb = wet_bulb_temperature(.data$temp_c, .data$rh),
         heat_index = heat_index(.data$temp_c, .data$rh),
-        tmrt = mean_radiant_temperature(.data$temp_c, .data$solar_radiation, .data$wind_speed),
+        tmrt = mean_radiant_temperature(.data$temp_c, .data$solar_radiation_wm2, .data$wind_speed),
         wbgt = wbgt_simple(.data$temp_c, .data$rh,
           wind_speed = .data$wind_speed,
-          solar_radiation = .data$solar_radiation
+          solar_radiation = .data$solar_radiation_wm2
         ),
         utci = utci_sparse(.data$temp_c,
           tmrt = .data$tmrt,
@@ -1210,7 +1212,7 @@ GetERA5DailyHeatIndexData <- function(request_id, start_date, end_date,
         heat_index_risk = heat_index_risk_category(.data$heat_index),
         utci_stress = utci_category(.data$utci)
       ) %>%
-      select(-"tmrt")
+      select(-"tmrt", -"solar_radiation_wm2")
   } else {
     heat_data <- climate_data %>%
       mutate(
