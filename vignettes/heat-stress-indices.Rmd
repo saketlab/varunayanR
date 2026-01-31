@@ -318,26 +318,29 @@ ggplot() +
 # Risk assessment
 
 ```{r risk_categories, fig.width=12, fig.height=5}
+wbgt_levels <- c("Low", "Moderate", "High", "Very high", "Extreme")
+hi_levels <- c("Normal", "Caution", "Extreme Caution", "Danger", "Extreme Danger")
+
 district_map <- district_map %>%
   mutate(
-    wbgt_risk = wbgt_risk_category(wbgt),
-    hi_risk = heat_index_risk_category(heat_index),
+    wbgt_risk = factor(wbgt_risk_category(wbgt), levels = wbgt_levels),
+    hi_risk = factor(heat_index_risk_category(heat_index), levels = hi_levels),
     utci_stress = utci_category(utci)
   )
 
 risk_colors <- c(
   Low = "#2ECC71", Moderate = "#F1C40F", High = "#E67E22",
-  `Very high` = "#E74C3C", Extreme = "#9B59B6"
+  `Very high` = "#E74C3C", Extreme = "#8E44AD"
 )
 hi_colors <- c(
   Normal = "#2ECC71", Caution = "#F1C40F", `Extreme Caution` = "#E67E22",
-  Danger = "#E74C3C", `Extreme Danger` = "#9B59B6"
+  Danger = "#E74C3C", `Extreme Danger` = "#8E44AD"
 )
 
 risk_map <- function(var, colors, title) {
   ggplot(district_map) +
     geom_sf(aes(fill = .data[[var]]), color = "white", linewidth = 0.05) +
-    scale_fill_manual(values = colors, na.value = "grey90", drop = FALSE) +
+    scale_fill_manual(values = colors, na.value = "grey90", drop = TRUE) +
     labs(title = title) +
     theme_void() +
     theme(legend.title = element_blank())

@@ -1,4 +1,8 @@
 url: https://saketlab.github.io/varunayanR/
+
+development:
+  mode: auto
+
 template:
   bootstrap: 5
   light-switch: true
@@ -74,10 +78,6 @@ navbar:
     right: [search, github, lightswitch]
 
   components:
-    home:
-      icon: fas fa-home fa-lg
-      href: index.html
-
     reference:
       text: Reference
       href: reference/index.html

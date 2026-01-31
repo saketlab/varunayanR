@@ -515,6 +515,14 @@ pre:hover .btn-copy-ex {
   font-weight: 600;
   font-size: 17px;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-brand img {
+  height: 28px;
+  width: auto;
 }
 
 .nav-link {
