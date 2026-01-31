@@ -1,6 +1,8 @@
 ---
 title: "Spatial aggregation methods"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    self_contained: true
 vignette: >
   %\VignetteIndexEntry{Spatial aggregation methods}
   %\VignetteEngine{knitr::rmarkdown}

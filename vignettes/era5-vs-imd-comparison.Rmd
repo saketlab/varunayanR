@@ -1,6 +1,8 @@
 ---
 title: "ERA5 vs IMD: Temperature comparison (2023)"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    self_contained: true
 vignette: >
   %\VignetteIndexEntry{ERA5 vs IMD: Temperature comparison (2023)}
   %\VignetteEngine{knitr::rmarkdown}

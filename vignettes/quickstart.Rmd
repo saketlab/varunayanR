@@ -1,6 +1,8 @@
 ---
 title: "Quickstart Guide"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    self_contained: true
 vignette: >
   %\VignetteIndexEntry{Quickstart Guide}
   %\VignetteEngine{knitr::rmarkdown}

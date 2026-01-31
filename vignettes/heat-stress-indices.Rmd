@@ -1,6 +1,8 @@
 ---
 title: "Heat stress indices comparison"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    self_contained: true
 vignette: >
   %\VignetteIndexEntry{Heat stress indices comparison}
   %\VignetteEngine{knitr::rmarkdown}
