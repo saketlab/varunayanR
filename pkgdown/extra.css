@@ -512,17 +512,30 @@ pre:hover .btn-copy-ex {
 }
 
 .navbar-brand {
-  font-weight: 600;
-  font-size: 17px;
-  color: var(--text-primary);
+  font-size: 0;
+  color: transparent;
   display: flex;
   align-items: center;
-  gap: 8px;
+}
+
+.navbar-brand::before {
+  content: "";
+  display: inline-block;
+  width: 86px;
+  height: 59px;
+  background-image: url("logo.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .navbar-brand img {
-  height: 28px;
-  width: auto;
+  display: none;
+}
+
+/* Hide logo that appears next to page title in content area */
+img.logo {
+  display: none !important;
 }
 
 .nav-link {
