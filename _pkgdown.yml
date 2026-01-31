@@ -91,6 +91,8 @@ navbar:
         href: articles/era5-vs-imd-comparison.html
       - text: Visualising and aggregating grid data
         href: articles/spatial-aggregation.html
+      - text: Heat stress indices comparison
+        href: articles/heat-stress-indices.html
 
     news:
       text: Changelog

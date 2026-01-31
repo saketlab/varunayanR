@@ -41,14 +41,11 @@ relative_humidity_from_dewpoint <- function(temp_c, dewpoint_c) {
 #' wet_bulb_temperature(30, 60)
 wet_bulb_temperature <- function(temp_c, rh) {
   rh <- pmin(pmax(rh, 5), 99)
-
-  tw <- temp_c * atan(0.151977 * sqrt(rh + 8.313659)) +
+  temp_c * atan(0.151977 * sqrt(rh + 8.313659)) +
     atan(temp_c + rh) -
     atan(rh - 1.676331) +
     0.00391838 * (rh^1.5) * atan(0.023101 * rh) -
     4.686035
-
-  tw
 }
 
 #' Calculate wet bulb temperature from dewpoint
@@ -144,36 +141,15 @@ heat_index_from_dewpoint <- function(temp_c, dewpoint_c) {
 #' wbgt_simple(35, 70)
 #' wbgt_simple(35, 70, wind_speed = 2, solar_radiation = 800)
 wbgt_simple <- function(temp_c, rh, wind_speed = 0.5, solar_radiation = NULL) {
-  ws <- pmax(wind_speed, 0.5)
-
-  # Psychrometric wet bulb (Stull formula)
   tw <- wet_bulb_temperature(temp_c, rh)
 
-  # 1. For indoor and outdoor conditions with no solar load, WBGT is calculated as:
-  #   WBGT = 0.7NWB + 0.3GT
-  #
-  # 2. For outdoors with a solar load, WBGT is calculated as
-  #   WBGT = 0.7  NWB + 0.2GT + 0.1DB
-  #   where:
-  #   WBGT = Wet Bulb Globe Temperature Index
-  #   NWB = Nature Wet-Bulb Temperature
-  #   DB =Dry-Bulb Temperature
-  #   GT =Globe Temperature
-
   if (!is.null(solar_radiation)) {
-    # Globe temperature (Dimiceli et al.)
-    # Tg = 0.009624*SR + 1.102*Ta - 0.00404*RH - 2.2776
     tg <- 0.009624 * solar_radiation + 1.102 * temp_c - 0.00404 * rh - 2.2776
-
-    # Natural wet bulb is higher than psychrometric due to radiant heat load
     tw_natural <- tw + 0.0048 * solar_radiation
-
-    wbgt <- 0.7 * tw_natural + 0.2 * tg + 0.1 * temp_c
+    0.7 * tw_natural + 0.2 * tg + 0.1 * temp_c
   } else {
-    wbgt <- 0.7 * tw + 0.3 * temp_c
+    0.7 * tw + 0.3 * temp_c
   }
-
-  wbgt
 }
 
 #' Calculate WBGT from dewpoint
@@ -206,8 +182,7 @@ wbgt_from_dewpoint <- function(temp_c, dewpoint_c, wind_speed = 0.5,
 #' humidex(30, 22)
 humidex <- function(temp_c, dewpoint_c) {
   e <- 6.11 * exp(5417.7530 * (1 / 273.16 - 1 / (273.15 + dewpoint_c)))
-  h <- temp_c + 0.5555 * (e - 10)
-  h
+  temp_c + 0.5555 * (e - 10)
 }
 
 #' Calculate vapor pressure from dewpoint temperature
@@ -262,21 +237,17 @@ mean_radiant_temperature <- function(temp_c, solar_radiation = NULL, wind_speed 
 utci <- function(temp_c, wind_speed, dewpoint_c, tmrt = NULL) {
   Ta <- temp_c
   va <- pmax(pmin(wind_speed, 17), 0.5)
-  Pa <- vapor_pressure_from_dewpoint(dewpoint_c) / 10 # Convert to kPa
+  Pa <- vapor_pressure_from_dewpoint(dewpoint_c) / 10
   D_Tmrt <- if (is.null(tmrt)) 0 else (tmrt - temp_c)
 
-  # UTCI polynomial approximation (Bröde et al. 2012)
-  # Offset
   utci_val <- Ta +
     0.607562052 +
-    # Ta terms
     (-0.0227712343) * Ta +
     (8.06470249e-4) * Ta * Ta +
     (-1.54271372e-4) * Ta * Ta * Ta +
     (-3.24651735e-6) * Ta * Ta * Ta * Ta +
     (7.32602852e-8) * Ta * Ta * Ta * Ta * Ta +
     (1.35959073e-9) * Ta * Ta * Ta * Ta * Ta * Ta +
-    # va terms
     (-2.25836520) * va +
     (0.0880326035) * Ta * va +
     (0.00216844454) * Ta * Ta * va +
@@ -298,7 +269,6 @@ utci <- function(temp_c, wind_speed, dewpoint_c, tmrt = NULL) {
     (4.56306672e-4) * va * va * va * va * va +
     (-1.74202546e-7) * Ta * va * va * va * va * va +
     (-5.91491269e-6) * va * va * va * va * va * va +
-    # D_Tmrt terms
     (0.398374029) * D_Tmrt +
     (1.83945314e-4) * Ta * D_Tmrt +
     (-1.73754510e-4) * Ta * Ta * D_Tmrt +
@@ -355,7 +325,6 @@ utci <- function(temp_c, wind_speed, dewpoint_c, tmrt = NULL) {
     (4.03863260e-13) * Ta * D_Tmrt * D_Tmrt * D_Tmrt * D_Tmrt * D_Tmrt +
     (1.95087203e-12) * va * D_Tmrt * D_Tmrt * D_Tmrt * D_Tmrt * D_Tmrt +
     (-4.73602469e-12) * D_Tmrt * D_Tmrt * D_Tmrt * D_Tmrt * D_Tmrt * D_Tmrt +
-    # Pa terms
     (5.12733497) * Pa +
     (-0.312788561) * Ta * Pa +
     (-0.0196701861) * Ta * Ta * Pa +
@@ -767,11 +736,7 @@ utci_sparse <- function(temp_c, tmrt, wind_speed, rh) {
     -0.0131987351201934 * va10 +
     0.000543804208687463 * va1 * rH9
 
-  UTCI_offset <- UTCI_offset_normalized * 45.135 - 17.085
-
-  UTCI_approximation <- Ta + UTCI_offset
-
-  UTCI_approximation
+  Ta + UTCI_offset_normalized * 45.135 - 17.085
 }
 
 #' UTCI thermal stress categories
@@ -854,6 +819,309 @@ heat_index_risk_category <- function(hi) {
   cut(hi, breaks = breaks, labels = labels, right = FALSE)
 }
 
+.download_era5_var <- function(var_name, suffix, request_id, start_date, end_date,
+                               json_file, north, south, east, west,
+                               resolution, use_cache, verbose) {
+  if (!is.null(json_file)) {
+    era5ify_geojson(
+      request_id = paste0(request_id, "_", suffix),
+      variables = var_name,
+      start_date = start_date,
+      end_date = end_date,
+      json_file = json_file,
+      frequency = "daily",
+      resolution = resolution,
+      use_cache = use_cache,
+      convert_units = TRUE,
+      verbose = verbose
+    )
+  } else {
+    era5ify_bbox(
+      request_id = paste0(request_id, "_", suffix),
+      variables = var_name,
+      start_date = start_date,
+      end_date = end_date,
+      north = north, south = south, east = east, west = west,
+      frequency = "daily",
+      resolution = resolution,
+      use_cache = use_cache,
+      convert_units = TRUE,
+      verbose = verbose
+    )
+  }
+}
+
+.validate_region <- function(json_file, north, south, east, west) {
+  has_bbox <- !is.null(north) && !is.null(south) && !is.null(east) && !is.null(west)
+  if (is.null(json_file) && !has_bbox) {
+    stop("Must provide either json_file or bounding box coordinates (north, south, east, west)")
+  }
+}
+
+#' Download daily ERA5 climate data
+#'
+#' Flexible function to download ERA5 climate variables for a region.
+#' Supports temperature, humidity, wet bulb, wind, and solar radiation.
+#'
+#' @param request_id Unique identifier for the data request
+#' @param start_date Start date in "YYYY-MM-DD" format
+#' @param end_date End date in "YYYY-MM-DD" format
+#' @param variables Character vector of variables to download. Options:
+#'   "temperature", "humidity", "wet_bulb", "wind", "solar"
+#' @param json_file Path to GeoJSON file defining the region
+#' @param north,south,east,west Bounding box coordinates (alternative to json_file)
+#' @param resolution Spatial resolution in degrees (default: 0.25)
+#' @param use_cache Whether to use cached data (default: TRUE)
+#' @param verbose Whether to print progress messages (default: FALSE)
+#' @return data.frame with date, latitude, longitude, and requested variables
+#' @export
+#' @examples
+#' \dontrun{
+#' # Get temperature and humidity
+#' climate <- GetERA5DailyClimate(
+#'   request_id = "india_climate",
+#'   start_date = "2023-05-01",
+#'   end_date = "2023-05-31",
+#'   variables = c("temperature", "humidity"),
+#'   json_file = "india.geojson"
+#' )
+#' }
+GetERA5DailyClimate <- function(request_id, start_date, end_date,
+                                variables = c("temperature", "humidity"),
+                                json_file = NULL,
+                                north = NULL, south = NULL,
+                                east = NULL, west = NULL,
+                                resolution = 0.25,
+                                use_cache = TRUE,
+                                verbose = FALSE) {
+  .validate_region(json_file, north, south, east, west)
+
+  valid_vars <- c("temperature", "humidity", "wet_bulb", "wind", "solar")
+  invalid <- setdiff(variables, valid_vars)
+  if (length(invalid) > 0) {
+    stop(
+      "Invalid variables: ", paste(invalid, collapse = ", "),
+      ". Valid options: ", paste(valid_vars, collapse = ", ")
+    )
+  }
+
+  download_var <- function(var_name, suffix) {
+    .download_era5_var(
+      var_name, suffix, request_id, start_date, end_date,
+      json_file, north, south, east, west, resolution, use_cache, verbose
+    )
+  }
+
+  result <- NULL
+
+  if ("temperature" %in% variables || "humidity" %in% variables ||
+    "wet_bulb" %in% variables) {
+    era5_temp <- download_var("2m_temperature", "temp") %>%
+      mutate(temp_c = .data$value, date = as.Date(.data$datetime)) %>%
+      select("date", "latitude", "longitude", "temp_c")
+    result <- era5_temp
+  }
+
+  if ("humidity" %in% variables || "wet_bulb" %in% variables) {
+    era5_dewpoint <- download_var("2m_dewpoint_temperature", "dewpoint") %>%
+      mutate(dewpoint_c = .data$value, date = as.Date(.data$datetime)) %>%
+      select("date", "latitude", "longitude", "dewpoint_c")
+    result <- result %>%
+      inner_join(era5_dewpoint, by = c("date", "latitude", "longitude")) %>%
+      mutate(rh = relative_humidity_from_dewpoint(.data$temp_c, .data$dewpoint_c))
+  }
+
+  if ("wet_bulb" %in% variables) {
+    result <- result %>%
+      mutate(wet_bulb = wet_bulb_temperature(.data$temp_c, .data$rh))
+  }
+
+  if ("wind" %in% variables) {
+    era5_u <- download_var("10m_u_component_of_wind", "wind_u") %>%
+      mutate(wind_u = .data$value, date = as.Date(.data$datetime)) %>%
+      select("date", "latitude", "longitude", "wind_u")
+    era5_v <- download_var("10m_v_component_of_wind", "wind_v") %>%
+      mutate(wind_v = .data$value, date = as.Date(.data$datetime)) %>%
+      select("date", "latitude", "longitude", "wind_v")
+
+    wind_data <- era5_u %>%
+      inner_join(era5_v, by = c("date", "latitude", "longitude")) %>%
+      mutate(wind_speed = sqrt(.data$wind_u^2 + .data$wind_v^2)) %>%
+      select("date", "latitude", "longitude", "wind_speed")
+
+    if (is.null(result)) {
+      result <- wind_data
+    } else {
+      result <- result %>%
+        inner_join(wind_data, by = c("date", "latitude", "longitude"))
+    }
+  }
+
+  if ("solar" %in% variables) {
+    era5_solar <- download_var("surface_solar_radiation_downwards", "solar") %>%
+      mutate(solar_radiation = .data$value, date = as.Date(.data$datetime)) %>%
+      select("date", "latitude", "longitude", "solar_radiation")
+
+    if (is.null(result)) {
+      result <- era5_solar
+    } else {
+      result <- result %>%
+        inner_join(era5_solar, by = c("date", "latitude", "longitude"))
+    }
+  }
+
+  result
+}
+
+#' @rdname GetERA5DailyClimate
+#' @export
+get_era5_daily_climate <- GetERA5DailyClimate
+
+#' Download daily ERA5 temperature data
+#'
+#' @param request_id Unique identifier for the data request
+#' @param start_date Start date in "YYYY-MM-DD" format
+#' @param end_date End date in "YYYY-MM-DD" format
+#' @param json_file Path to GeoJSON file defining the region
+#' @param north,south,east,west Bounding box coordinates (alternative to json_file)
+#' @param resolution Spatial resolution in degrees (default: 0.25)
+#' @param use_cache Whether to use cached data (default: TRUE)
+#' @param verbose Whether to print progress messages (default: FALSE)
+#' @return data.frame with date, latitude, longitude, temp_c
+#' @export
+#' @examples
+#' \dontrun{
+#' temp <- GetERA5DailyTemperature(
+#'   request_id = "india_temp",
+#'   start_date = "2023-05-01",
+#'   end_date = "2023-05-31",
+#'   json_file = "india.geojson"
+#' )
+#' }
+GetERA5DailyTemperature <- function(request_id, start_date, end_date,
+                                    json_file = NULL,
+                                    north = NULL, south = NULL,
+                                    east = NULL, west = NULL,
+                                    resolution = 0.25,
+                                    use_cache = TRUE,
+                                    verbose = FALSE) {
+  GetERA5DailyClimate(request_id, start_date, end_date,
+    variables = "temperature",
+    json_file = json_file,
+    north = north, south = south, east = east, west = west,
+    resolution = resolution, use_cache = use_cache, verbose = verbose
+  )
+}
+
+#' @rdname GetERA5DailyTemperature
+#' @export
+get_era5_daily_temperature <- GetERA5DailyTemperature
+
+#' Download daily ERA5 humidity data
+#'
+#' Downloads temperature, dewpoint, and calculates relative humidity.
+#'
+#' @inheritParams GetERA5DailyTemperature
+#' @return data.frame with date, latitude, longitude, temp_c, dewpoint_c, rh
+#' @export
+#' @examples
+#' \dontrun{
+#' humidity <- GetERA5DailyHumidity(
+#'   request_id = "india_humidity",
+#'   start_date = "2023-05-01",
+#'   end_date = "2023-05-31",
+#'   json_file = "india.geojson"
+#' )
+#' }
+GetERA5DailyHumidity <- function(request_id, start_date, end_date,
+                                 json_file = NULL,
+                                 north = NULL, south = NULL,
+                                 east = NULL, west = NULL,
+                                 resolution = 0.25,
+                                 use_cache = TRUE,
+                                 verbose = FALSE) {
+  GetERA5DailyClimate(request_id, start_date, end_date,
+    variables = "humidity",
+    json_file = json_file,
+    north = north, south = south, east = east, west = west,
+    resolution = resolution, use_cache = use_cache, verbose = verbose
+  )
+}
+
+#' @rdname GetERA5DailyHumidity
+#' @export
+get_era5_daily_humidity <- GetERA5DailyHumidity
+
+#' Download daily ERA5 wet bulb temperature data
+#'
+#' Downloads temperature, dewpoint, and calculates RH and wet bulb temperature.
+#'
+#' @inheritParams GetERA5DailyTemperature
+#' @return data.frame with date, latitude, longitude, temp_c, dewpoint_c, rh, wet_bulb
+#' @export
+#' @examples
+#' \dontrun{
+#' wetbulb <- GetERA5DailyWetBulb(
+#'   request_id = "india_wetbulb",
+#'   start_date = "2023-05-01",
+#'   end_date = "2023-05-31",
+#'   json_file = "india.geojson"
+#' )
+#' }
+GetERA5DailyWetBulb <- function(request_id, start_date, end_date,
+                                json_file = NULL,
+                                north = NULL, south = NULL,
+                                east = NULL, west = NULL,
+                                resolution = 0.25,
+                                use_cache = TRUE,
+                                verbose = FALSE) {
+  GetERA5DailyClimate(request_id, start_date, end_date,
+    variables = "wet_bulb",
+    json_file = json_file,
+    north = north, south = south, east = east, west = west,
+    resolution = resolution, use_cache = use_cache, verbose = verbose
+  )
+}
+
+#' @rdname GetERA5DailyWetBulb
+#' @export
+get_era5_daily_wet_bulb <- GetERA5DailyWetBulb
+
+#' Download daily ERA5 wind data
+#'
+#' Downloads 10m wind components and calculates wind speed.
+#'
+#' @inheritParams GetERA5DailyTemperature
+#' @return data.frame with date, latitude, longitude, wind_speed
+#' @export
+#' @examples
+#' \dontrun{
+#' wind <- GetERA5DailyWind(
+#'   request_id = "india_wind",
+#'   start_date = "2023-05-01",
+#'   end_date = "2023-05-31",
+#'   json_file = "india.geojson"
+#' )
+#' }
+GetERA5DailyWind <- function(request_id, start_date, end_date,
+                             json_file = NULL,
+                             north = NULL, south = NULL,
+                             east = NULL, west = NULL,
+                             resolution = 0.25,
+                             use_cache = TRUE,
+                             verbose = FALSE) {
+  GetERA5DailyClimate(request_id, start_date, end_date,
+    variables = "wind",
+    json_file = json_file,
+    north = north, south = south, east = east, west = west,
+    resolution = resolution, use_cache = use_cache, verbose = verbose
+  )
+}
+
+#' @rdname GetERA5DailyWind
+#' @export
+get_era5_daily_wind <- GetERA5DailyWind
+
 #' Download ERA5 data and calculate heat stress indices
 #'
 #' Downloads ERA5 temperature, dewpoint, and wind data for a region and calculates
@@ -868,134 +1136,193 @@ heat_index_risk_category <- function(hi) {
 #' @param south Southern latitude boundary (for bbox method)
 #' @param east Eastern longitude boundary (for bbox method)
 #' @param west Western longitude boundary (for bbox method)
+#' @param solar_load Whether to include solar radiation in calculations (default: FALSE).
+#'   When TRUE, downloads solar radiation data and uses it for WBGT and UTCI.
 #' @param resolution Spatial resolution in degrees (default: 0.25)
 #' @param use_cache Whether to use cached data if available (default: TRUE)
 #' @param verbose Whether to print progress messages (default: FALSE)
 #' @return data.frame with columns: date, latitude, longitude, temp_c, dewpoint_c,
 #'   wind_speed, rh, wet_bulb, heat_index, wbgt, utci, humidex, wbgt_risk,
-#'   heat_index_risk, utci_stress
+#'   heat_index_risk, utci_stress. When solar_load=TRUE, also includes solar_radiation.
 #' @export
 #' @examples
 #' \dontrun{
-#' # Using GeoJSON file
-#' heat_data <- GetERA5DailyHeatData(
+#' heat_data <- GetERA5DailyHeatIndexData(
 #'   request_id = "india_heat_2023",
 #'   start_date = "2023-05-01",
 #'   end_date = "2023-05-31",
 #'   json_file = "india.geojson"
 #' )
 #'
-#' # Using bounding box
-#' heat_data <- GetERA5DailyHeatData(
-#'   request_id = "region_heat_2023",
+#' # With solar radiation for outdoor WBGT
+#' heat_data <- GetERA5DailyHeatIndexData(
+#'   request_id = "india_heat_2023_solar",
 #'   start_date = "2023-05-01",
 #'   end_date = "2023-05-31",
-#'   north = 35, south = 25, east = 90, west = 70
+#'   json_file = "india.geojson",
+#'   solar_load = TRUE
 #' )
 #' }
-GetERA5DailyHeatData <- function(request_id, start_date, end_date,
-                                 json_file = NULL,
-                                 north = NULL, south = NULL,
-                                 east = NULL, west = NULL,
-                                 resolution = 0.25,
-                                 use_cache = TRUE,
-                                 verbose = FALSE) {
-  use_geojson <- !is.null(json_file)
-  use_bbox <- !is.null(north) && !is.null(south) && !is.null(east) && !is.null(west)
+GetERA5DailyHeatIndexData <- function(request_id, start_date, end_date,
+                                      json_file = NULL,
+                                      north = NULL, south = NULL,
+                                      east = NULL, west = NULL,
+                                      solar_load = FALSE,
+                                      resolution = 0.25,
+                                      use_cache = TRUE,
+                                      verbose = FALSE) {
+  .validate_region(json_file, north, south, east, west)
 
-  if (!use_geojson && !use_bbox) {
-    stop("Must provide either json_file or bounding box coordinates (north, south, east, west)")
+  variables <- if (solar_load) {
+    c("temperature", "humidity", "wind", "solar")
+  } else {
+    c("temperature", "humidity", "wind")
   }
 
-  if (use_geojson && use_bbox) {
-    use_bbox <- FALSE
-  }
+  climate_data <- GetERA5DailyClimate(
+    request_id = request_id,
+    start_date = start_date,
+    end_date = end_date,
+    variables = variables,
+    json_file = json_file,
+    north = north, south = south, east = east, west = west,
+    resolution = resolution,
+    use_cache = use_cache,
+    verbose = verbose
+  )
 
-  download_era5_var <- function(var_name, suffix) {
-    if (use_geojson) {
-      era5ify_geojson(
-        request_id = paste0(request_id, "_", suffix),
-        variables = var_name,
-        start_date = start_date,
-        end_date = end_date,
-        json_file = json_file,
-        frequency = "daily",
-        resolution = resolution,
-        use_cache = use_cache,
-        convert_units = TRUE,
-        verbose = verbose
+  if (solar_load) {
+    heat_data <- climate_data %>%
+      mutate(
+        wet_bulb = wet_bulb_temperature(.data$temp_c, .data$rh),
+        heat_index = heat_index(.data$temp_c, .data$rh),
+        tmrt = mean_radiant_temperature(.data$temp_c, .data$solar_radiation, .data$wind_speed),
+        wbgt = wbgt_simple(.data$temp_c, .data$rh,
+          wind_speed = .data$wind_speed,
+          solar_radiation = .data$solar_radiation
+        ),
+        utci = utci_sparse(.data$temp_c,
+          tmrt = .data$tmrt,
+          wind_speed = .data$wind_speed, rh = .data$rh
+        ),
+        humidex = humidex(.data$temp_c, .data$dewpoint_c),
+        wbgt_risk = wbgt_risk_category(.data$wbgt),
+        heat_index_risk = heat_index_risk_category(.data$heat_index),
+        utci_stress = utci_category(.data$utci)
+      ) %>%
+      select(-"tmrt")
+  } else {
+    heat_data <- climate_data %>%
+      mutate(
+        wet_bulb = wet_bulb_temperature(.data$temp_c, .data$rh),
+        heat_index = heat_index(.data$temp_c, .data$rh),
+        wbgt = wbgt_simple(.data$temp_c, .data$rh, wind_speed = .data$wind_speed),
+        utci = utci_sparse(.data$temp_c,
+          tmrt = .data$temp_c,
+          wind_speed = .data$wind_speed, rh = .data$rh
+        ),
+        humidex = humidex(.data$temp_c, .data$dewpoint_c),
+        wbgt_risk = wbgt_risk_category(.data$wbgt),
+        heat_index_risk = heat_index_risk_category(.data$heat_index),
+        utci_stress = utci_category(.data$utci)
       )
-    } else {
-      era5ify_bbox(
-        request_id = paste0(request_id, "_", suffix),
-        variables = var_name,
-        start_date = start_date,
-        end_date = end_date,
-        north = north, south = south, east = east, west = west,
-        frequency = "daily",
-        resolution = resolution,
-        use_cache = use_cache,
-        convert_units = TRUE,
-        verbose = verbose
-      )
-    }
   }
-
-  # Download temperature
-  era5_temp <- download_era5_var("2m_temperature", "temp") %>%
-    mutate(
-      temp_c = .data$value,
-      date = as.Date(.data$datetime)
-    ) %>%
-    select("date", "latitude", "longitude", "temp_c")
-
-  # Download dewpoint
-  era5_dewpoint <- download_era5_var("2m_dewpoint_temperature", "dewpoint") %>%
-    mutate(
-      dewpoint_c = .data$value,
-      date = as.Date(.data$datetime)
-    ) %>%
-    select("date", "latitude", "longitude", "dewpoint_c")
-
-  era5_u <- download_era5_var("10m_u_component_of_wind", "wind_u") %>%
-    mutate(
-      wind_u = .data$value,
-      date = as.Date(.data$datetime)
-    ) %>%
-    select("date", "latitude", "longitude", "wind_u")
-
-  era5_v <- download_era5_var("10m_v_component_of_wind", "wind_v") %>%
-    mutate(
-      wind_v = .data$value,
-      date = as.Date(.data$datetime)
-    ) %>%
-    select("date", "latitude", "longitude", "wind_v")
-
-  heat_data <- era5_temp %>%
-    inner_join(era5_dewpoint, by = c("date", "latitude", "longitude")) %>%
-    inner_join(era5_u, by = c("date", "latitude", "longitude")) %>%
-    inner_join(era5_v, by = c("date", "latitude", "longitude")) %>%
-    mutate(
-      # Calculate wind speed from u and v components
-      wind_speed = sqrt(.data$wind_u^2 + .data$wind_v^2),
-      rh = relative_humidity_from_dewpoint(.data$temp_c, .data$dewpoint_c),
-      wet_bulb = wet_bulb_from_dewpoint(.data$temp_c, .data$dewpoint_c),
-      heat_index = heat_index_from_dewpoint(.data$temp_c, .data$dewpoint_c),
-      wbgt = wbgt_from_dewpoint(.data$temp_c, .data$dewpoint_c, wind_speed = .data$wind_speed),
-      # UTCI assumes Tmrt = Ta (no radiation data) for shade conditions
-      utci = utci_sparse(.data$temp_c, tmrt = .data$temp_c,
-                         wind_speed = .data$wind_speed,
-                         rh = .data$rh),
-      humidex = humidex(.data$temp_c, .data$dewpoint_c),
-      wbgt_risk = wbgt_risk_category(.data$wbgt),
-      heat_index_risk = heat_index_risk_category(.data$heat_index),
-      utci_stress = utci_category(.data$utci)
-    ) %>%
-    select(-"wind_u", -"wind_v")
 
   heat_data
 }
 
-#' @rdname GetERA5DailyHeatData
+#' @rdname GetERA5DailyHeatIndexData
 #' @export
-get_era5_daily_heat_data <- GetERA5DailyHeatData
+get_era5_daily_heat_index_data <- GetERA5DailyHeatIndexData
+
+#' @rdname GetERA5DailyHeatIndexData
+#' @export
+GetERA5DailyHeatData <- GetERA5DailyHeatIndexData
+
+#' @rdname GetERA5DailyHeatIndexData
+#' @export
+get_era5_daily_heat_data <- GetERA5DailyHeatIndexData
+
+#' Get monthly ERA5 heat stress index data
+#'
+#' Wrapper for GetERA5DailyHeatIndexData that takes year and month parameters
+#' and returns monthly aggregated heat stress indices.
+#'
+#' @param request_id Unique identifier for the data request
+#' @param year Year (e.g., 2023)
+#' @param month Month (1-12)
+#' @param json_file Path to GeoJSON file defining the region
+#' @param north,south,east,west Bounding box coordinates (alternative to json_file)
+#' @param solar_load Whether to include solar radiation (default: FALSE)
+#' @param resolution Spatial resolution in degrees (default: 0.25)
+#' @param use_cache Whether to use cached data (default: TRUE)
+#' @param verbose Whether to print progress messages (default: FALSE)
+#' @return data.frame with monthly mean values for each grid point
+#' @export
+#' @examples
+#' \dontrun{
+#' heat_may <- GetERA5MonthlyHeatIndexData(
+#'   request_id = "india_may2023",
+#'   year = 2023,
+#'   month = 5,
+#'   json_file = "india.geojson"
+#' )
+#' }
+GetERA5MonthlyHeatIndexData <- function(request_id, year, month,
+                                        json_file = NULL,
+                                        north = NULL, south = NULL,
+                                        east = NULL, west = NULL,
+                                        solar_load = FALSE,
+                                        resolution = 0.25,
+                                        use_cache = TRUE,
+                                        verbose = FALSE) {
+  start_date <- sprintf("%d-%02d-01", year, month)
+  next_month <- if (month == 12) sprintf("%d-01-01", year + 1) else sprintf("%d-%02d-01", year, month + 1)
+  end_date <- as.character(as.Date(next_month) - 1)
+
+  daily_data <- GetERA5DailyHeatData(
+    request_id = request_id,
+    start_date = start_date,
+    end_date = end_date,
+    json_file = json_file,
+    north = north, south = south, east = east, west = west,
+    solar_load = solar_load,
+    resolution = resolution,
+    use_cache = use_cache,
+    verbose = verbose
+  )
+
+  numeric_cols <- c(
+    "temp_c", "dewpoint_c", "wind_speed", "rh", "wet_bulb",
+    "heat_index", "wbgt", "utci", "humidex"
+  )
+  if (solar_load) numeric_cols <- c(numeric_cols, "solar_radiation")
+
+  monthly_data <- daily_data %>%
+    group_by(.data$latitude, .data$longitude) %>%
+    summarise(
+      year = year,
+      month = month,
+      across(any_of(numeric_cols), ~ mean(.x, na.rm = TRUE)),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      wbgt_risk = wbgt_risk_category(.data$wbgt),
+      heat_index_risk = heat_index_risk_category(.data$heat_index),
+      utci_stress = utci_category(.data$utci)
+    )
+
+  monthly_data
+}
+
+#' @rdname GetERA5MonthlyHeatIndexData
+#' @export
+get_era5_monthly_heat_index_data <- GetERA5MonthlyHeatIndexData
+
+#' @rdname GetERA5MonthlyHeatIndexData
+#' @export
+GetERA5MonthlyHeatData <- GetERA5MonthlyHeatIndexData
+
+#' @rdname GetERA5MonthlyHeatIndexData
+#' @export
+get_era5_monthly_heat_data <- GetERA5MonthlyHeatIndexData
