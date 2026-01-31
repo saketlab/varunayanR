@@ -31,7 +31,8 @@ library(sf)
 library(lubridate)
 library(tidyr)
 library(patchwork)
-theme_set(theme_minimal(base_size = 12))
+library(ggpubr)
+theme_set(theme_pubr(base_size = 11))
 ```
 
 Any study interested in assessing the impact of climate change on health outcomes would be interested in
@@ -188,26 +189,24 @@ When `solar_load = TRUE`, the function downloads solar radiation data and uses i
 to calculate more accurate outdoor WBGT and UTCI values. This accounts for the
 additional heat stress from direct sunlight.
 
-```{r solar_comparison, fig.width=10, fig.height=5}
+```{r solar_comparison, fig.width=8, fig.height=5}
 daily_mean <- function(df, condition) {
   df %>%
     group_by(date) %>%
-    summarise(WBGT = mean(wbgt), UTCI = mean(utci), .groups = "drop") %>%
+    summarise(WBGT = mean(wbgt), .groups = "drop") %>%
     mutate(Condition = condition)
 }
 
-solar_compare <- bind_rows(daily_mean(heat_shade, "Shade"), daily_mean(heat_solar, "Sun")) %>%
-  pivot_longer(c(WBGT, UTCI), names_to = "Index", values_to = "value")
+solar_compare <- bind_rows(daily_mean(heat_shade, "Shade"), daily_mean(heat_solar, "Sun"))
 
-ggplot(solar_compare, aes(date, value, color = Condition)) +
+ggplot(solar_compare, aes(date, WBGT, color = Condition)) +
   geom_line(linewidth = 1) +
-  facet_wrap(~Index, scales = "free_y") +
   scale_color_manual(values = c(Shade = "#3498DB", Sun = "#E74C3C")) +
-  labs(title = "Impact of solar radiation on heat stress indices", x = NULL, y = "°C")
+  labs(title = "Impact of solar radiation on WBGT", x = NULL, y = "WBGT (°C)")
 ```
 
 The difference between sun and shade conditions shows the additional thermal stress
-from solar radiation exposure, which can add several degrees to both WBGT and UTCI.
+from solar radiation exposure, which can add several degrees to WBGT.
 
 ## Temporal analysis
 
@@ -308,8 +307,9 @@ heat_map <- function(var, title) {
 ## Relative humidity choropleth
 
 ```{r map_rh, fig.width=10, fig.height=7}
-ggplot(district_map) +
-  geom_sf(aes(fill = rh), color = "white", linewidth = 0.05) +
+ggplot() +
+  geom_sf(data = district_map, aes(fill = rh), color = NA) +
+  geom_sf(data = states_sf, fill = NA, color = "grey40", linewidth = 0.3) +
   scale_fill_distiller(palette = "Blues", direction = 1, name = "RH (%)", na.value = "grey90") +
   labs(title = "Mean relative humidity - India (May 2023)") +
   theme_void()
