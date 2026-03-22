@@ -1,7 +1,7 @@
 url: https://saketlab.github.io/varunayanR/
 
 development:
-  mode: auto
+  mode: release
 
 template:
   bootstrap: 5
