@@ -75,7 +75,8 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
                                resolution, frequency, output_dir, request_id,
                                pressure_levels = NULL, save_raw = FALSE, use_cache = TRUE,
                                verbose = FALSE) {
-  chunks <- create_temporal_chunks(start_dt, end_dt, frequency, max_days_per_chunk = 31)
+  chunk_days <- if (frequency == "monthly") 93 else 31 # ~3 months per chunk for monthly to avoid CDS timeouts
+  chunks <- create_temporal_chunks(start_dt, end_dt, frequency, max_days_per_chunk = chunk_days)
 
   if (length(x = chunks) > 1) {
     message(sprintf(fmt = "Processing %d temporal chunks...", length(x = chunks)))

@@ -93,6 +93,8 @@ navbar:
         href: articles/spatial-aggregation.html
       - text: Heat stress indices comparison
         href: articles/heat-stress-indices.html
+      - text: Country-level temperature trends
+        href: articles/country-temperature.html
 
     news:
       text: Changelog

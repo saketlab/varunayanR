@@ -74,7 +74,7 @@ setup_cds_credentials <- function(key = NULL) {
 #' @return Character string path to downloaded file
 download_era5_single <- function(variables, start_date, end_date, area = NULL,
                                  resolution = 0.25, frequency = "hourly", output_file,
-                                 timeout = 3600, retry_attempts = 2, use_cache = TRUE,
+                                 timeout = 3600, retry_attempts = 5, use_cache = TRUE,
                                  verbose = FALSE) {
   if (use_cache) {
     cache_key <- generate_cache_key(
@@ -174,7 +174,7 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
         }
       },
       error = function(e) {
-        last_error <- e
+        last_error <<- e
         NULL
       }
     )
@@ -188,6 +188,12 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
           "Run setup_cds_credentials(key = 'your-api-key') with a valid key.\n",
           "Get your API key from: https://cds.climate.copernicus.eu/api-how-to"
         )
+      } else if (grepl(pattern = "rate.limit|429", last_error$message, ignore.case = TRUE)) {
+        wait_secs <- as.numeric(sub(".*wait (\\d+) seconds.*", "\\1", last_error$message))
+        if (is.na(wait_secs)) wait_secs <- 60
+        warning(sprintf(fmt = "Rate limited on attempt %s. Waiting %s seconds...", attempt, wait_secs), call. = FALSE)
+        Sys.sleep(wait_secs)
+        next
       } else if (grepl(pattern = "timeout|time.*out", last_error$message, ignore.case = TRUE)) {
         warning(sprintf(fmt = "Request timed out on attempt %s. Retrying...", attempt), call. = FALSE)
         next
@@ -499,7 +505,9 @@ get_single_level_variable_names <- function() {
     "soil_temperature_level_2", "soil_temperature_level_3",
     "soil_temperature_level_4", "volumetric_soil_water_layer_1",
     "volumetric_soil_water_layer_2", "volumetric_soil_water_layer_3",
-    "volumetric_soil_water_layer_4", "snow_depth", "snow_density"
+    "volumetric_soil_water_layer_4", "snow_depth", "snow_density",
+    "maximum_2m_temperature_since_previous_post_processing",
+    "minimum_2m_temperature_since_previous_post_processing"
   )
 }
 

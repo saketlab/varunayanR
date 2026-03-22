@@ -72,6 +72,11 @@ ClearCache <- function(...) clear_cache(...)
 #' @export
 GetCacheDir <- function(...) get_cache_dir(...)
 
+# Country-level convenience functions
+#' @rdname get_era5_country_temperature
+#' @export
+GetERA5CountryTemperature <- function(...) get_era5_country_temperature(...)
+
 # System utilities
 
 #' @rdname check_system_readiness
