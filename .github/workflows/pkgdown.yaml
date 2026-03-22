@@ -40,9 +40,20 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
+      - name: Set up CDS credentials
+        if: env.CDS_API_KEY != ''
+        run: |
+          mkdir -p ~/.config/ecmwfr
+          echo "url: https://cds.climate.copernicus.eu/api" > ~/.cdsapirc
+          echo "key: $CDS_API_KEY" >> ~/.cdsapirc
+        env:
+          CDS_API_KEY: ${{ secrets.CDS_API_KEY }}
+
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
+        env:
+          CDS_API_KEY: ${{ secrets.CDS_API_KEY }}
 
       - name: Upload artifact
         if: github.event_name != 'pull_request'
