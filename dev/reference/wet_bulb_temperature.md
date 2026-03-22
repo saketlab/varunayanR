@@ -1,0 +1,39 @@
+# Calculate wet bulb temperature
+
+Calculates wet bulb temperature using the Stull (2011) empirical
+formula. Valid for temperatures between -20C and 50C and RH between 5%
+and 99%.
+
+## Usage
+
+``` r
+wet_bulb_temperature(temp_c, rh)
+```
+
+## Arguments
+
+- temp_c:
+
+  Air temperature in celsius
+
+- rh:
+
+  Relative humidity as percentage (0-100)
+
+## Value
+
+Wet bulb temperature in Celsius
+
+## References
+
+Stull, R. (2011). Wet-Bulb Temperature from Relative Humidity and Air
+Temperature. Journal of Applied Meteorology and Climatology, 50(11),
+2267-2269.
+https://journals.ametsoc.org/view/journals/apme/50/11/jamc-d-11-0143.1.xml
+
+## Examples
+
+``` r
+wet_bulb_temperature(30, 60)
+#> [1] 23.99552
+```
