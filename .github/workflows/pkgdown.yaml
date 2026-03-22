@@ -10,18 +10,15 @@ on:
 
 name: pkgdown
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+permissions: read-all
 
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pages: write
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +40,6 @@ jobs:
       - name: Set up CDS credentials
         if: env.CDS_API_KEY != ''
         run: |
-          mkdir -p ~/.config/ecmwfr
           echo "url: https://cds.climate.copernicus.eu/api" > ~/.cdsapirc
           echo "key: $CDS_API_KEY" >> ~/.cdsapirc
         env:
@@ -55,22 +51,10 @@ jobs:
         env:
           CDS_API_KEY: ${{ secrets.CDS_API_KEY }}
 
-      - name: Upload artifact
+      - name: Deploy to GitHub pages
         if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: docs
-
-  deploy:
-    if: github.event_name != 'pull_request'
-    needs: pkgdown
-    runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          clean: false
+          branch: gh-pages
+          folder: docs
