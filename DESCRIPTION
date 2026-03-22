@@ -43,7 +43,8 @@ Suggests:
     units,
     R.utils,
     gridExtra,
-    ncmeta
+    ncmeta,
+    ggpubr
 VignetteBuilder: knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
