@@ -1,3 +1,6 @@
+# data.table non-standard evaluation bindings
+utils::globalVariables(c("datetime_date", "weight", "col_name"))
+
 #' Get ERA5 country-level temperature data
 #'
 #' Convenience function to download and aggregate ERA5 temperature data for a
@@ -39,6 +42,7 @@
 #' poly <- st_read("my_country.geojson")
 #' get_era5_country_temperature(poly, "2023-01-01", "2023-06-30")
 #' }
+
 get_era5_country_temperature <- function(country, start_date, end_date,
                                          variables = "mean",
                                          request_id = NULL,

@@ -68,7 +68,7 @@ setup_cds_credentials <- function(key = NULL) {
 #' @param frequency Character string: "hourly", "daily", "monthly"
 #' @param output_file Character string path for output NetCDF file
 #' @param timeout Numeric value for request timeout in seconds (default: 3600)
-#' @param retry_attempts Integer number of retry attempts (default: 2)
+#' @param retry_attempts Integer number of retry attempts (default: 5)
 #' @param use_cache Use cached data if available (default: TRUE)
 #' @param verbose Logical indicating whether to print progress messages
 #' @return Character string path to downloaded file

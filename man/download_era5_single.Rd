@@ -13,7 +13,7 @@ download_era5_single(
   frequency = "hourly",
   output_file,
   timeout = 3600,
-  retry_attempts = 2,
+  retry_attempts = 5,
   use_cache = TRUE,
   verbose = FALSE
 )
@@ -35,7 +35,7 @@ download_era5_single(
 
 \item{timeout}{Numeric value for request timeout in seconds (default: 3600)}
 
-\item{retry_attempts}{Integer number of retry attempts (default: 2)}
+\item{retry_attempts}{Integer number of retry attempts (default: 5)}
 
 \item{use_cache}{Use cached data if available (default: TRUE)}
 
