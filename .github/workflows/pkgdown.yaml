@@ -10,15 +10,18 @@ on:
 
 name: pkgdown
 
-permissions: read-all
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      pages: write
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -51,10 +54,22 @@ jobs:
         env:
           CDS_API_KEY: ${{ secrets.CDS_API_KEY }}
 
-      - name: Deploy to GitHub pages
+      - name: Upload artifact
         if: github.event_name != 'pull_request'
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: actions/upload-pages-artifact@v3
         with:
-          clean: false
-          branch: gh-pages
-          folder: docs
+          path: docs
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: pkgdown
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
