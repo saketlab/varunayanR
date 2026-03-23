@@ -1,4 +1,3 @@
-# data.table non-standard evaluation bindings
 utils::globalVariables(c("datetime_date", "weight", "col_name"))
 
 #' Get ERA5 country-level temperature data
@@ -80,21 +79,49 @@ get_era5_country_temperature <- function(country, start_date, end_date,
     request_id <- paste0("country_", gsub("[^a-zA-Z0-9]", "_", tolower(country_label)))
   }
 
-  raw_list <- lapply(era5_vars, function(v) {
-    rid <- paste0(request_id, "_", gsub("[^a-zA-Z0-9]", "_", v))
-    era5ify_geojson(
-      request_id = rid,
-      variables   = v,
-      start_date  = start_date,
-      end_date    = end_date,
-      json_file   = tmp_geojson,
-      frequency   = "monthly",
-      resolution  = resolution,
-      verbose     = verbose,
-      ...
-    )
-  })
-  raw <- do.call(rbind, raw_list)
+  # st_intersects is expensive; here we run it once on the first variable, then
+  # reuse the grid mask for the rest via keyed join.
+  first_rid <- paste0(request_id, "_", gsub("[^a-zA-Z0-9]", "_", era5_vars[1]))
+  first_result <- era5ify_geojson(
+    request_id = first_rid,
+    variables   = era5_vars[1],
+    start_date  = start_date,
+    end_date    = end_date,
+    json_file   = tmp_geojson,
+    frequency   = "monthly",
+    resolution  = resolution,
+    verbose     = verbose,
+    ...
+  )
+
+  if (length(era5_vars) == 1) {
+    raw <- first_result
+  } else {
+    grid_mask <- unique(data.table::as.data.table(first_result)[, .(latitude, longitude)])
+    data.table::setkey(grid_mask, latitude, longitude)
+    bbox <- sf::st_bbox(polygon)
+
+    rest_list <- lapply(era5_vars[-1], function(v) {
+      rid <- paste0(request_id, "_", gsub("[^a-zA-Z0-9]", "_", v))
+      bbox_data <- era5ify_bbox(
+        request_id = rid,
+        variables   = v,
+        start_date  = start_date,
+        end_date    = end_date,
+        north = bbox[["ymax"]], south = bbox[["ymin"]],
+        east  = bbox[["xmax"]], west  = bbox[["xmin"]],
+        frequency   = "monthly",
+        resolution  = resolution,
+        verbose     = verbose,
+        ...
+      )
+      dt <- data.table::as.data.table(bbox_data)
+      data.table::setkey(dt, latitude, longitude)
+      dt[grid_mask, nomatch = 0L]
+    })
+
+    raw <- data.table::rbindlist(c(list(first_result), rest_list), use.names = TRUE)
+  }
 
   dt <- data.table::as.data.table(raw)
   dt[, datetime_date := as.Date(datetime)]
