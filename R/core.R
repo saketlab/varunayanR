@@ -75,7 +75,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
                                resolution, frequency, output_dir, request_id,
                                pressure_levels = NULL, save_raw = FALSE, use_cache = TRUE,
                                verbose = FALSE) {
-  chunk_days <- if (frequency == "monthly") 93 else 31 # ~3 months per chunk for monthly to avoid CDS timeouts
+  chunk_days <- if (frequency == "monthly") 36600 else 31 # monthly product is tiny; hourly/daily needs small chunks to avoid CDS timeouts
   chunks <- create_temporal_chunks(start_dt, end_dt, frequency, max_days_per_chunk = chunk_days)
 
   if (length(x = chunks) > 1) {
@@ -104,7 +104,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
           frequency = frequency,
           output_file = chunk_file,
           timeout = 1800,
-          retry_attempts = 3,
+          retry_attempts = 5,
           use_cache = use_cache,
           verbose = verbose
         )
@@ -145,7 +145,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
         frequency = frequency,
         output_file = output_file,
         timeout = 3600,
-        retry_attempts = 2,
+        retry_attempts = 5,
         use_cache = use_cache,
         verbose = verbose
       )
@@ -333,7 +333,15 @@ era5ify_bbox <- function(request_id, variables, start_date, end_date,
     if (!save_raw && file.exists(result$file)) unlink(result$file)
   }
 
-  if (frequency != "hourly") processed_data <- aggregate_by_frequency(processed_data, frequency, verbose = verbose)
+  # Monthly-means product is pre-aggregated; skip client-side aggregation
+  if (frequency == "monthly") {
+    if (!"year" %in% colnames(processed_data) && "datetime" %in% colnames(processed_data)) {
+      processed_data$year <- as.integer(format(processed_data$datetime, "%Y"))
+      processed_data$month <- as.integer(format(processed_data$datetime, "%m"))
+    }
+  } else if (frequency != "hourly") {
+    processed_data <- aggregate_by_frequency(processed_data, frequency, verbose = verbose)
+  }
 
   if (convert_units) {
     processed_data <- convert_era5_units(processed_data)

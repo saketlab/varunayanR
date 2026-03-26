@@ -36,8 +36,8 @@ monthly ERA5 data, and returns cosine-latitude area-weighted national
 averages. One call replaces the manual workflow of finding boundaries,
 writing GeoJSON, calling `era5ify_geojson()`, and aggregating grid cells.
 
-Below we compare monthly mean, max, and min temperatures across four European
-and four South Asian countries for 2024.
+Monthly mean, max, and min temperatures for four European and four South Asian
+countries, 2024.
 
 ## Download data
 
@@ -111,8 +111,6 @@ freezing from November through March.
 
 ## Monthly trend lines with min/max ribbon
 
-The ribbon spans national-average daily min to daily max temperature.
-
 ```{r trendlines, fig.height = 8}
 ggplot(temps, aes(x = month, color = country, fill = country)) +
   geom_ribbon(aes(ymin = temperature_min, ymax = temperature_max),
@@ -124,8 +122,8 @@ ggplot(temps, aes(x = month, color = country, fill = country)) +
   scale_fill_manual(values = country_colors) +
   scale_x_continuous(breaks = 1:12, labels = month.abb) +
   labs(x = NULL, y = "Temperature (\u00B0C)",
-       title = "Monthly temperature with min\u2013max range (2024)",
-       subtitle = "Ribbon spans national-average daily min to daily max",
+       title = "Monthly temperature with min-max range (2024)",
+       subtitle = "Ribbon: national-average daily min to daily max",
        color = NULL, fill = NULL) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")

@@ -1,4 +1,4 @@
-utils::globalVariables(c("datetime_date", "weight", "col_name"))
+utils::globalVariables(c("weight", "col_name"))
 
 #' Get ERA5 country-level temperature data
 #'
@@ -108,15 +108,12 @@ get_era5_country_temperature <- function(country, start_date, end_date,
   data.table::setkey(dt_all, latitude, longitude)
   raw <- dt_all[grid_mask, nomatch = 0L]
 
-  dt <- data.table::as.data.table(raw)
-  dt[, datetime_date := as.Date(datetime)]
-  dt[, c("year", "month") := .(data.table::year(datetime_date),
-                                data.table::month(datetime_date))]
-  dt[, datetime_date := NULL]
-  dt[, weight := cos(latitude * pi / 180)]
+  raw[, c("year", "month") := .(data.table::year(datetime),
+                                 data.table::month(datetime))]
+  raw[, weight := cos(latitude * pi / 180)]
 
-  agg <- dt[, .(value = stats::weighted.mean(value, weight, na.rm = TRUE)),
-            by = .(year, month, variable)]
+  agg <- raw[, .(value = stats::weighted.mean(value, weight, na.rm = TRUE)),
+              by = .(year, month, variable)]
 
   agg[, col_name := col_map[variable]]
   agg[is.na(col_name), col_name := variable]

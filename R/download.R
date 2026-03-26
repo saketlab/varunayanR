@@ -1,5 +1,11 @@
 #' ERA5 data download functions using ecmwfr
 
+# Variables not available in the monthly-means product (require hourly reanalysis)
+.MONTHLY_MEANS_UNSUPPORTED <- c(
+  "maximum_2m_temperature_since_previous_post_processing",
+  "minimum_2m_temperature_since_previous_post_processing"
+)
+
 #' Set up CDS credentials for ERA5 data access
 #'
 #' This function helps users set up their Copernicus Climate Data Store (CDS) credentials
@@ -76,6 +82,9 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
                                  resolution = 0.25, frequency = "hourly", output_file,
                                  timeout = 3600, retry_attempts = 5, use_cache = TRUE,
                                  verbose = FALSE) {
+  use_monthly_means <- (frequency == "monthly") &&
+    !any(variables %in% .MONTHLY_MEANS_UNSUPPORTED)
+
   if (use_cache) {
     cache_key <- generate_cache_key(
       source = "era5",
@@ -84,7 +93,7 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
       end_date = end_date,
       area = area,
       resolution = resolution,
-      dataset_type = "single"
+      dataset_type = if (use_monthly_means) "single_monthly_means" else "single"
     )
 
     cached_file <- check_cache(cache_key)
@@ -99,30 +108,50 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
   start_str <- format(as.Date(x = start_date), "%Y-%m-%d")
   end_str <- format(as.Date(x = end_date), "%Y-%m-%d")
 
-  date_seq <- seq(from = as.Date(x = start_date), to = as.Date(x = end_date), by = "day")
-  date_strings <- format(date_seq, "%Y-%m-%d")
+  if (use_monthly_means) {
+    # Monthly-means product is pre-aggregated; uses year/month params instead of daily dates
+    month_seq <- seq(from = as.Date(x = start_date), to = as.Date(x = end_date), by = "month")
+    years <- unique(format(month_seq, "%Y"))
+    months <- unique(format(month_seq, "%m"))
 
-  time_values <- switch(frequency,
-    "hourly" = sprintf(fmt = "%02d:00", 0:23),
-    "daily" = "12:00",
-    "monthly" = "12:00",
-    sprintf(fmt = "%02d:00", 0:23)
-  )
+    request <- list(
+      product_type = "monthly_averaged_reanalysis",
+      format = "netcdf",
+      variable = variables,
+      year = years,
+      month = months,
+      time = "00:00",
+      grid = c(resolution, resolution)
+    )
+  } else {
+    date_seq <- seq(from = as.Date(x = start_date), to = as.Date(x = end_date), by = "day")
+    date_strings <- format(date_seq, "%Y-%m-%d")
 
-  request <- list(
-    product_type = "reanalysis",
-    format = "netcdf",
-    variable = variables,
-    date = date_strings,
-    time = time_values,
-    grid = c(resolution, resolution)
-  )
+    time_values <- switch(frequency,
+      "hourly" = sprintf(fmt = "%02d:00", 0:23),
+      "daily" = "12:00",
+      sprintf(fmt = "%02d:00", 0:23)
+    )
+
+    request <- list(
+      product_type = "reanalysis",
+      format = "netcdf",
+      variable = variables,
+      date = date_strings,
+      time = time_values,
+      grid = c(resolution, resolution)
+    )
+  }
 
   if (!is.null(area)) {
     request$area <- area
   }
 
-  request$dataset_short_name <- "reanalysis-era5-single-levels"
+  request$dataset_short_name <- if (use_monthly_means) {
+    "reanalysis-era5-single-levels-monthly-means"
+  } else {
+    "reanalysis-era5-single-levels"
+  }
   request$target <- basename(path = output_file)
 
   if (!get_cds_credentials(silent = TRUE)) {
@@ -146,10 +175,13 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
 
   downloaded_file <- NULL
   last_error <- NULL
+  failures <- 0
+  rate_limit_hits <- 0
+  max_rate_limit_hits <- 20
 
-  for (attempt in 1:(retry_attempts + 1)) {
-    if (attempt > 1) {
-      message(sprintf(fmt = "Retry attempt %s/%s", attempt - 1, retry_attempts))
+  repeat {
+    if (failures > 0) {
+      message(sprintf(fmt = "Retry attempt %s/%s", failures, retry_attempts))
       Sys.sleep(5)
     }
 
@@ -189,29 +221,37 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
           "Get your API key from: https://cds.climate.copernicus.eu/api-how-to"
         )
       } else if (grepl(pattern = "rate.limit|429", last_error$message, ignore.case = TRUE)) {
+        rate_limit_hits <- rate_limit_hits + 1
+        if (rate_limit_hits > max_rate_limit_hits) {
+          stop("Exceeded ", max_rate_limit_hits, " rate-limit retries. Try again later.")
+        }
         wait_secs <- as.numeric(sub(".*wait (\\d+) seconds.*", "\\1", last_error$message))
         if (is.na(wait_secs)) wait_secs <- 60
-        warning(sprintf(fmt = "Rate limited on attempt %s. Waiting %s seconds...", attempt, wait_secs), call. = FALSE)
+        warning(sprintf(fmt = "Rate limited (%d/%d). Waiting %s seconds...",
+                        rate_limit_hits, max_rate_limit_hits, wait_secs), call. = FALSE)
         Sys.sleep(wait_secs)
-        next
+        next # skip the 5s sleep at top since we already waited
       } else if (grepl(pattern = "timeout|time.*out", last_error$message, ignore.case = TRUE)) {
-        warning(sprintf(fmt = "Request timed out on attempt %s. Retrying...", attempt), call. = FALSE)
-        next
+        failures <- failures + 1
+        warning(sprintf(fmt = "Request timed out on attempt %s. Retrying...", failures), call. = FALSE)
       } else if (grepl(pattern = "queue|busy|server", last_error$message, ignore.case = TRUE)) {
-        warning(sprintf(fmt = "CDS server is busy on attempt %s. Retrying...", attempt), call. = FALSE)
-        next
+        failures <- failures + 1
+        warning(sprintf(fmt = "CDS server is busy on attempt %s. Retrying...", failures), call. = FALSE)
       } else {
-        warning(sprintf(fmt = "Download failed on attempt %s: %s", attempt, last_error$message), call. = FALSE)
-        if (attempt <= retry_attempts) next
+        failures <- failures + 1
+        warning(sprintf(fmt = "Download failed on attempt %s: %s", failures, last_error$message), call. = FALSE)
       }
+    } else {
+      failures <- failures + 1
     }
-  }
 
-  if (is.null(downloaded_file) && !is.null(last_error)) {
-    stop(
-      "Download failed after {retry_attempts + 1} attempts: ", last_error$message, "\n",
-      "Check your internet connection and CDS service status at: https://cds.climate.copernicus.eu/"
-    )
+    if (failures > retry_attempts) {
+      stop(
+        sprintf("Download failed after %d attempts: ", failures),
+        if (!is.null(last_error)) last_error$message else "unknown error", "\n",
+        "Check your internet connection and CDS service status at: https://cds.climate.copernicus.eu/"
+      )
+    }
   }
 
   # wf_request returns the path to the downloaded file

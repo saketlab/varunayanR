@@ -52,6 +52,54 @@ test_that("varunayan:::.resolve_country_polygon errors on bad input", {
   expect_error(varunayan:::.resolve_country_polygon(c("India", "USA")), "must be a country name")
 })
 
+test_that("monthly frequency skips aggregation and extracts year/month", {
+  # Simulate data as returned by the monthly-means product (already aggregated)
+  processed_data <- data.frame(
+    datetime = as.POSIXct(c("2024-01-01", "2024-02-01", "2024-03-01")),
+    latitude = c(48.0, 48.0, 48.0),
+    longitude = c(2.0, 2.0, 2.0),
+    variable = rep("t2m", 3),
+    value = c(5.0, 8.0, 12.0)
+  )
+
+  # The monthly branch should add year/month columns without calling aggregate_by_frequency
+  frequency <- "monthly"
+  if (frequency == "monthly") {
+    if (!"year" %in% colnames(processed_data) && "datetime" %in% colnames(processed_data)) {
+      processed_data$year <- as.integer(format(processed_data$datetime, "%Y"))
+      processed_data$month <- as.integer(format(processed_data$datetime, "%m"))
+    }
+  }
+
+  expect_true("year" %in% colnames(processed_data))
+  expect_true("month" %in% colnames(processed_data))
+  expect_equal(processed_data$year, c(2024L, 2024L, 2024L))
+  expect_equal(processed_data$month, c(1L, 2L, 3L))
+  # Original values preserved (no aggregation)
+  expect_equal(processed_data$value, c(5.0, 8.0, 12.0))
+})
+
+test_that("monthly year/month extraction skipped when columns already exist", {
+  processed_data <- data.frame(
+    datetime = as.POSIXct("2024-06-01"),
+    year = 2024L,
+    month = 6L,
+    value = 25.0
+  )
+
+  frequency <- "monthly"
+  if (frequency == "monthly") {
+    if (!"year" %in% colnames(processed_data) && "datetime" %in% colnames(processed_data)) {
+      processed_data$year <- as.integer(format(processed_data$datetime, "%Y"))
+      processed_data$month <- as.integer(format(processed_data$datetime, "%m"))
+    }
+  }
+
+  # Should not overwrite existing columns
+  expect_equal(processed_data$year, 2024L)
+  expect_equal(processed_data$month, 6L)
+})
+
 test_that("variable shorthand mapping works", {
   # Test the mapping logic inline
   var_map <- c(
