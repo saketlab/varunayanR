@@ -148,10 +148,23 @@ get_era5_country_temperature <- function(country, start_date, end_date,
   }
 
   aliases <- c(
-    "USA"    = "USA",
-    "US"     = "USA",
-    "UK"     = "UK",
-    "Russia" = "USSR"
+    "USA"             = "USA",
+    "US"              = "USA",
+    "United States"   = "USA",
+    "UK"              = "UK",
+    "United Kingdom"  = "UK",
+    "Russia"          = "USSR",
+    "Czechia"         = "Czech Republic",
+    "Czech Republic"  = "Czech Republic",
+    "South Korea"     = "South Korea",
+    "North Korea"     = "North Korea",
+    "North Macedonia" = "North Macedonia",
+    "Ivory Coast"     = "Ivory Coast",
+    "Eswatini"        = "Swaziland",
+    "Timor-Leste"     = "Timor-Leste",
+    "Cabo Verde"      = "Cape Verde",
+    "Turkiye"         = "Turkey",
+    "Türkiye"         = "Turkey"
   )
 
   region <- if (country %in% names(aliases)) aliases[[country]] else country

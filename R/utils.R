@@ -376,6 +376,20 @@ read_cdsapirc <- function(file_path = "~/.cdsapirc") {
 #' @return Logical indicating whether credentials are available
 #' @export
 get_cds_credentials <- function(silent = FALSE) {
+  # Check env var FIRST — allows parallel workers to use different keys
+  env_key <- Sys.getenv("CDS_API_KEY", unset = "")
+  if (nzchar(env_key)) {
+    if (!silent) message("Setting up CDS credentials from CDS_API_KEY environment variable...")
+    tryCatch(
+      {
+        suppressWarnings(wf_set_key(key = env_key))
+        if (!silent) message("CDS credentials configured")
+        return(TRUE)
+      },
+      error = function(e) FALSE
+    )
+  }
+
   has_creds <- suppressWarnings(tryCatch(
     {
       key <- wf_get_key()

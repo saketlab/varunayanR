@@ -36,13 +36,11 @@ convert_era5_units <- function(data) {
     data$value <- as.numeric(x = data$value)
   }
 
-  # Convert temperature: Kelvin to Celsius
   temp_mask <- data$variable %in% TEMP_VARS
   if (any(temp_mask)) {
     data$value[temp_mask] <- data$value[temp_mask] - 273.15
   }
 
-  # Convert precipitation: meters to mm
   precip_mask <- data$variable %in% PRECIP_VARS
   if (any(precip_mask)) {
     data$value[precip_mask] <- data$value[precip_mask] * 1000
@@ -75,8 +73,20 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
                                resolution, frequency, output_dir, request_id,
                                pressure_levels = NULL, save_raw = FALSE, use_cache = TRUE,
                                verbose = FALSE) {
-  chunk_days <- if (frequency == "monthly") 36600 else 31 # monthly product is tiny; hourly/daily needs small chunks to avoid CDS timeouts
-  chunks <- create_temporal_chunks(start_dt, end_dt, frequency, max_days_per_chunk = chunk_days)
+  if (frequency == "monthly") {
+    # Align to calendar year boundaries so seq(by="month") doesn't skip months
+    start_year <- as.integer(format(as.Date(start_dt), "%Y"))
+    end_year <- as.integer(format(as.Date(end_dt), "%Y"))
+    chunks <- lapply(start_year:end_year, function(yr) {
+      list(
+        start = paste0(yr, "-01-01"),
+        end = paste0(yr, "-12-31")
+      )
+    })
+  } else {
+    chunk_days <- if (frequency == "hourly") 31 else 365
+    chunks <- create_temporal_chunks(start_dt, end_dt, frequency, max_days_per_chunk = chunk_days)
+  }
 
   if (length(x = chunks) > 1) {
     message(sprintf(fmt = "Processing %d temporal chunks...", length(x = chunks)))
@@ -333,11 +343,11 @@ era5ify_bbox <- function(request_id, variables, start_date, end_date,
     if (!save_raw && file.exists(result$file)) unlink(result$file)
   }
 
-  # Monthly-means product is pre-aggregated; skip client-side aggregation
   if (frequency == "monthly") {
-    if (!"year" %in% colnames(processed_data) && "datetime" %in% colnames(processed_data)) {
-      processed_data$year <- as.integer(format(processed_data$datetime, "%Y"))
-      processed_data$month <- as.integer(format(processed_data$datetime, "%m"))
+    time_col <- intersect(c("datetime", "time"), colnames(processed_data))[1]
+    if (!"year" %in% colnames(processed_data) && !is.na(time_col)) {
+      processed_data$year <- as.integer(format(processed_data[[time_col]], "%Y"))
+      processed_data$month <- as.integer(format(processed_data[[time_col]], "%m"))
     }
   } else if (frequency != "hourly") {
     processed_data <- aggregate_by_frequency(processed_data, frequency, verbose = verbose)

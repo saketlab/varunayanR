@@ -82,6 +82,7 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
                                  resolution = 0.25, frequency = "hourly", output_file,
                                  timeout = 3600, retry_attempts = 5, use_cache = TRUE,
                                  verbose = FALSE) {
+  # Monthly-means product is faster and avoids per-day chunking
   use_monthly_means <- (frequency == "monthly") &&
     !any(variables %in% .MONTHLY_MEANS_UNSUPPORTED)
 
@@ -109,19 +110,18 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
   end_str <- format(as.Date(x = end_date), "%Y-%m-%d")
 
   if (use_monthly_means) {
-    # Monthly-means product is pre-aggregated; uses year/month params instead of daily dates
     month_seq <- seq(from = as.Date(x = start_date), to = as.Date(x = end_date), by = "month")
-    years <- unique(format(month_seq, "%Y"))
-    months <- unique(format(month_seq, "%m"))
+    years <- as.list(unique(format(month_seq, "%Y")))
+    months <- as.list(unique(format(month_seq, "%m")))
 
     request <- list(
-      product_type = "monthly_averaged_reanalysis",
-      format = "netcdf",
-      variable = variables,
+      product_type = list("monthly_averaged_reanalysis"),
+      data_format = "netcdf",
+      download_format = "unarchived",
+      variable = as.list(variables),
       year = years,
       month = months,
-      time = "00:00",
-      grid = c(resolution, resolution)
+      time = list("12:00")
     )
   } else {
     date_seq <- seq(from = as.Date(x = start_date), to = as.Date(x = end_date), by = "day")
@@ -134,12 +134,12 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
     )
 
     request <- list(
-      product_type = "reanalysis",
-      format = "netcdf",
-      variable = variables,
-      date = date_strings,
-      time = time_values,
-      grid = c(resolution, resolution)
+      product_type = list("reanalysis"),
+      data_format = "netcdf",
+      download_format = "unarchived",
+      variable = as.list(variables),
+      date = as.list(date_strings),
+      time = as.list(time_values)
     )
   }
 
@@ -178,6 +178,7 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
   failures <- 0
   rate_limit_hits <- 0
   max_rate_limit_hits <- 20
+  effective_retries <- if (use_monthly_means) 1L else retry_attempts
 
   repeat {
     if (failures > 0) {
@@ -245,7 +246,25 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
       failures <- failures + 1
     }
 
-    if (failures > retry_attempts) {
+    if (failures > effective_retries) {
+      if (use_monthly_means && !is.null(last_error) &&
+          grepl("licence|license|permission denied|403|cost limits", last_error$message, ignore.case = TRUE)) {
+        message("Monthly-means dataset not available (license not accepted?). Falling back to regular dataset...")
+        use_monthly_means <- FALSE
+
+        date_seq <- seq(from = as.Date(x = start_date), to = as.Date(x = end_date), by = "day")
+        request$product_type <- list("reanalysis")
+        request$date <- as.list(format(date_seq, "%Y-%m-%d"))
+        request$time <- list("12:00")
+        request$year <- NULL
+        request$month <- NULL
+        request$dataset_short_name <- "reanalysis-era5-single-levels"
+
+        failures <- 0
+        last_error <- NULL
+        effective_retries <- retry_attempts
+        next
+      }
       stop(
         sprintf("Download failed after %d attempts: ", failures),
         if (!is.null(last_error)) last_error$message else "unknown error", "\n",
@@ -254,11 +273,8 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
     }
   }
 
-  # wf_request returns the path to the downloaded file
-  # Use it directly if it exists, otherwise fall back to searching
   if (!is.null(downloaded_file) && file.exists(downloaded_file)) {
     final_file <- downloaded_file
-    # Handle ZIP extraction if needed
     if (file_ext(downloaded_file) == "zip") {
       final_file <- extract_zip_to_nc(downloaded_file, dirname(path = output_file))
     }
@@ -329,13 +345,13 @@ download_era5_pressure <- function(variables, pressure_levels, start_date, end_d
   )
 
   request <- list(
-    product_type = "reanalysis",
-    format = "netcdf",
-    variable = variables,
-    pressure_level = pressure_levels,
-    date = date_strings,
-    time = time_values,
-    grid = c(resolution, resolution)
+    product_type = list("reanalysis"),
+    data_format = "netcdf",
+    download_format = "unarchived",
+    variable = as.list(variables),
+    pressure_level = as.list(pressure_levels),
+    date = as.list(date_strings),
+    time = as.list(time_values)
   )
 
   if (!is.null(area)) {
@@ -399,11 +415,8 @@ download_era5_pressure <- function(variables, pressure_levels, start_date, end_d
     }
   )
 
-  # wf_request returns the path to the downloaded file
-  # Use it directly if it exists, otherwise fall back to searching
   if (!is.null(downloaded_file) && file.exists(downloaded_file)) {
     final_file <- downloaded_file
-    # Handle ZIP extraction if needed
     if (file_ext(downloaded_file) == "zip") {
       final_file <- extract_zip_to_nc(downloaded_file, dirname(path = output_file))
     }
