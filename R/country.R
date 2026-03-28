@@ -164,7 +164,7 @@ get_era5_country_temperature <- function(country, start_date, end_date,
     "Timor-Leste"     = "Timor-Leste",
     "Cabo Verde"      = "Cape Verde",
     "Turkiye"         = "Turkey",
-    "Türkiye"         = "Turkey"
+    "T\u00fcrkiye"    = "Turkey"
   )
 
   region <- if (country %in% names(aliases)) aliases[[country]] else country
