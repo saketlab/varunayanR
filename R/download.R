@@ -228,8 +228,10 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
         }
         wait_secs <- as.numeric(sub(".*wait (\\d+) seconds.*", "\\1", last_error$message))
         if (is.na(wait_secs)) wait_secs <- 60
-        warning(sprintf(fmt = "Rate limited (%d/%d). Waiting %s seconds...",
-                        rate_limit_hits, max_rate_limit_hits, wait_secs), call. = FALSE)
+        warning(sprintf(
+          fmt = "Rate limited (%d/%d). Waiting %s seconds...",
+          rate_limit_hits, max_rate_limit_hits, wait_secs
+        ), call. = FALSE)
         Sys.sleep(wait_secs)
         next # skip the 5s sleep at top since we already waited
       } else if (grepl(pattern = "timeout|time.*out", last_error$message, ignore.case = TRUE)) {
@@ -248,7 +250,7 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
 
     if (failures > effective_retries) {
       if (use_monthly_means && !is.null(last_error) &&
-          grepl("licence|license|permission denied|403|cost limits", last_error$message, ignore.case = TRUE)) {
+        grepl("licence|license|permission denied|403|cost limits", last_error$message, ignore.case = TRUE)) {
         message("Monthly-means dataset not available (license not accepted?). Falling back to regular dataset...")
         use_monthly_means <- FALSE
 
@@ -265,9 +267,25 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
         effective_retries <- retry_attempts
         next
       }
+      err_msg <- if (!is.null(last_error)) last_error$message else "unknown error"
+
+      # Signal size-related failures so callers can split and retry
+      # Only treat "Request has failed" as splittable if the range spans > 1 year
+      is_size_error <- grepl("cost limits|too large|request is too large", err_msg, ignore.case = TRUE)
+      range_days <- as.numeric(as.Date(end_date) - as.Date(start_date))
+      is_generic_fail <- grepl("Request has failed", err_msg) && range_days > 400
+      if (is_size_error || is_generic_fail) {
+        cond <- simpleCondition(
+          message = paste0("CDS request too large: ", err_msg),
+          call = sys.call(-1)
+        )
+        class(cond) <- c("cds_request_too_large", "error", "condition")
+        stop(cond)
+      }
+
       stop(
         sprintf("Download failed after %d attempts: ", failures),
-        if (!is.null(last_error)) last_error$message else "unknown error", "\n",
+        err_msg, "\n",
         "Check your internet connection and CDS service status at: https://cds.climate.copernicus.eu/"
       )
     }
@@ -395,7 +413,22 @@ download_era5_pressure <- function(variables, pressure_levels, start_date, end_d
           "Run setup_cds_credentials(key = 'your-api-key') with a valid key.\n",
           "Get your API key from: https://cds.climate.copernicus.eu/api-how-to"
         )
-      } else if (grepl(pattern = "timeout|time.*out", e$message, ignore.case = TRUE)) {
+      }
+
+      # Signal size-related failures so callers can split and retry
+      is_size_error <- grepl("cost limits|too large|request is too large", e$message, ignore.case = TRUE)
+      range_days <- as.numeric(as.Date(end_date) - as.Date(start_date))
+      is_generic_fail <- grepl("Request has failed", e$message) && range_days > 400
+      if (is_size_error || is_generic_fail) {
+        cond <- simpleCondition(
+          message = paste0("CDS request too large: ", e$message),
+          call = sys.call(-1)
+        )
+        class(cond) <- c("cds_request_too_large", "error", "condition")
+        stop(cond)
+      }
+
+      if (grepl(pattern = "timeout|time.*out", e$message, ignore.case = TRUE)) {
         stop(
           "Request timed out. This can happen with large data requests.\n",
           "Try reducing the date range or area size, or try again later.\n",

@@ -34,14 +34,14 @@ utils::globalVariables(c("weight", "col_name"))
 #'
 #' # Mean and max temperature for USA
 #' get_era5_country_temperature("USA", "2023-01-01", "2023-12-31",
-#'   variables = c("mean", "max"))
+#'   variables = c("mean", "max")
+#' )
 #'
 #' # Using an sf object directly
 #' library(sf)
 #' poly <- st_read("my_country.geojson")
 #' get_era5_country_temperature(poly, "2023-01-01", "2023-06-30")
 #' }
-
 get_era5_country_temperature <- function(country, start_date, end_date,
                                          variables = "mean",
                                          request_id = NULL,
@@ -57,7 +57,7 @@ get_era5_country_temperature <- function(country, start_date, end_date,
     "2m_temperature" = "temperature_mean",
     "maximum_2m_temperature_since_previous_post_processing" = "temperature_max",
     "minimum_2m_temperature_since_previous_post_processing" = "temperature_min",
-    "t2m"  = "temperature_mean",
+    "t2m" = "temperature_mean",
     "mx2t" = "temperature_max",
     "mn2t" = "temperature_min"
   )
@@ -108,12 +108,15 @@ get_era5_country_temperature <- function(country, start_date, end_date,
   data.table::setkey(dt_all, latitude, longitude)
   raw <- dt_all[grid_mask, nomatch = 0L]
 
-  raw[, c("year", "month") := .(data.table::year(datetime),
-                                 data.table::month(datetime))]
+  raw[, c("year", "month") := .(
+    data.table::year(datetime),
+    data.table::month(datetime)
+  )]
   raw[, weight := cos(latitude * pi / 180)]
 
   agg <- raw[, .(value = stats::weighted.mean(value, weight, na.rm = TRUE)),
-              by = .(year, month, variable)]
+    by = .(year, month, variable)
+  ]
 
   agg[, col_name := col_map[variable]]
   agg[is.na(col_name), col_name := variable]
@@ -143,28 +146,53 @@ get_era5_country_temperature <- function(country, start_date, end_date,
   }
 
   if (!requireNamespace("maps", quietly = TRUE)) {
-    stop("Package 'maps' is required to resolve country names. ",
-         "Install it with: install.packages('maps')")
+    stop(
+      "Package 'maps' is required to resolve country names. ",
+      "Install it with: install.packages('maps')"
+    )
   }
 
   aliases <- c(
-    "USA"             = "USA",
-    "US"              = "USA",
-    "United States"   = "USA",
-    "UK"              = "UK",
-    "United Kingdom"  = "UK",
-    "Russia"          = "Russia",
-    "Czechia"         = "Czech Republic",
-    "Czech Republic"  = "Czech Republic",
-    "South Korea"     = "South Korea",
-    "North Korea"     = "North Korea",
+    "USA" = "USA",
+    "US" = "USA",
+    "United States" = "USA",
+    "U.S. Virgin Islands" = "Virgin Islands, US",
+    "UK" = "UK",
+    "United Kingdom" = "UK",
+    "Russia" = "Russia",
+    "Czechia" = "Czech Republic",
+    "Czech Republic" = "Czech Republic",
+    "South Korea" = "South Korea",
+    "North Korea" = "North Korea",
     "North Macedonia" = "North Macedonia",
-    "Ivory Coast"     = "Ivory Coast",
-    "Eswatini"        = "Swaziland",
-    "Timor-Leste"     = "Timor-Leste",
-    "Cabo Verde"      = "Cape Verde",
-    "Turkiye"         = "Turkey",
-    "T\u00fcrkiye"    = "Turkey"
+    "Ivory Coast" = "Ivory Coast",
+    "Eswatini" = "Swaziland",
+    "Timor-Leste" = "Timor-Leste",
+    "Cabo Verde" = "Cape Verde",
+    "Turkiye" = "Turkey",
+    "T\u00fcrkiye" = "Turkey",
+    "Antigua & Barbuda" = "Antigua",
+    "Antigua and Barbuda" = "Antigua",
+    "Bosnia & Herzegovina" = "Bosnia and Herzegovina",
+    "British Virgin Islands" = "Virgin Islands, British",
+    "Cura\u00e7ao" = "Curacao",
+    "Hong Kong" = "China:Hong Kong",
+    "Macao" = "China:Macao",
+    "R\u00e9union" = "Reunion",
+    "St. Kitts & Nevis" = "Saint Kitts",
+    "Saint Kitts and Nevis" = "Saint Kitts",
+    "St. Lucia" = "Saint Lucia",
+    "St. Pierre & Miquelon" = "Saint Pierre and Miquelon",
+    "St. Vincent & Grenadines" = "Saint Vincent",
+    "Saint Vincent and the Grenadines" = "Saint Vincent",
+    "St. Barth\u00e9lemy" = "Saint Barthelemy",
+    "Saint Martin (French part)" = "Saint Martin",
+    "S\u00e3o Tom\u00e9 & Pr\u00edncipe" = "Sao Tome and Principe",
+    "Sao Tome and Principe" = "Sao Tome and Principe",
+    "Trinidad & Tobago" = "Trinidad",
+    "Trinidad and Tobago" = "Trinidad",
+    "Turks & Caicos Islands" = "Turks and Caicos Islands",
+    "Wallis & Futuna" = "Wallis and Futuna"
   )
 
   region <- if (country %in% names(aliases)) aliases[[country]] else country

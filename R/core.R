@@ -1,5 +1,83 @@
 # ERA5 data download and processing for custom regions
 
+# CDS API field limits (from https://forum.ecmwf.int/t/cdsapi-limitations-and-restrictions/1639)
+# A "field" = 1 variable x 1 time step (x 1 pressure level if applicable)
+CDS_FIELD_LIMIT_HOURLY <- 120000L # reanalysis (hourly/daily)
+CDS_FIELD_LIMIT_MONTHLY <- 10000L # monthly-means product
+
+#' Estimate the number of CDS "fields" in a request
+#'
+#' The CDS API limits requests to 120,000 fields for hourly/daily reanalysis
+#' and 10,000 fields for monthly means. A field is one variable x one time step
+#' x one pressure level.
+#'
+#' @param n_variables Number of variables requested
+#' @param start_date Start date
+#' @param end_date End date
+#' @param frequency "hourly", "daily", or "monthly"
+#' @param n_pressure_levels Number of pressure levels (1 for single-level)
+#' @return Integer number of estimated fields
+#' @keywords internal
+estimate_cds_fields <- function(n_variables, start_date, end_date, frequency,
+                                n_pressure_levels = 1L) {
+  s <- as.Date(start_date)
+  e <- as.Date(end_date)
+  n_days <- as.integer(e - s) + 1L
+
+  times_per_day <- switch(frequency,
+    "hourly"  = 24L,
+    "daily"   = 1L,
+    "monthly" = NULL, # handled separately
+    24L
+  )
+
+  if (frequency == "monthly") {
+    # Monthly means: one time step per month
+    month_seq <- seq(s, e, by = "month")
+    n_timesteps <- length(month_seq)
+  } else {
+    n_timesteps <- n_days * times_per_day
+  }
+
+  as.integer(n_variables) * n_timesteps * as.integer(n_pressure_levels)
+}
+
+#' Compute optimal chunk size in days to stay within CDS field limits
+#'
+#' Given request parameters, calculates the maximum number of days per chunk
+#' so the field count stays safely under the CDS limit (using 90% of the limit
+#' as headroom).
+#'
+#' @param n_variables Number of variables
+#' @param frequency "hourly", "daily", or "monthly"
+#' @param n_pressure_levels Number of pressure levels (1 for single-level)
+#' @return Integer max days per chunk, or NULL for monthly (use year-based chunking)
+#' @keywords internal
+compute_optimal_chunk_days <- function(n_variables, frequency,
+                                       n_pressure_levels = 1L) {
+  if (frequency == "monthly") {
+    # Monthly means: limit is 10,000 fields
+    # fields = n_vars * n_months * n_pressure
+    # Use 90% headroom
+    safe_limit <- floor(CDS_FIELD_LIMIT_MONTHLY * 0.9)
+    max_months <- safe_limit %/% (as.integer(n_variables) * as.integer(n_pressure_levels))
+    # Convert to approximate years; minimum 1 year
+    max_years <- max(max_months %/% 12L, 1L)
+    return(max_years) # return years, not days, for monthly
+  }
+
+  times_per_day <- if (frequency == "hourly") 24L else 1L
+  safe_limit <- floor(CDS_FIELD_LIMIT_HOURLY * 0.9)
+  fields_per_day <- as.integer(n_variables) * times_per_day * as.integer(n_pressure_levels)
+
+  max_days <- safe_limit %/% fields_per_day
+  # Clamp to reasonable bounds
+  max_days <- max(max_days, 1L)
+  max_days <- min(max_days, 3650L) # cap at ~10 years
+
+  as.integer(max_days)
+}
+
 # Temperature variables that need Kelvin to Celsius conversion
 TEMP_VARS <- c(
   "2m_temperature", "2m_dewpoint_temperature", "skin_temperature",
@@ -73,108 +151,186 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
                                resolution, frequency, output_dir, request_id,
                                pressure_levels = NULL, save_raw = FALSE, use_cache = TRUE,
                                verbose = FALSE) {
+  n_vars <- length(variables)
+  n_plevels <- if (!is.null(pressure_levels)) length(pressure_levels) else 1L
+
+  # Estimate total fields and compute optimal chunk size proactively
+  total_fields <- estimate_cds_fields(n_vars, start_dt, end_dt, frequency, n_plevels)
+  field_limit <- if (frequency == "monthly") CDS_FIELD_LIMIT_MONTHLY else CDS_FIELD_LIMIT_HOURLY
+
+  if (verbose) {
+    message(sprintf(
+      "Estimated CDS fields: %s (limit: %s)", format(total_fields, big.mark = ","),
+      format(field_limit, big.mark = ",")
+    ))
+  }
+
   if (frequency == "monthly") {
-    # Align to calendar year boundaries so seq(by="month") doesn't skip months
+    # compute_optimal_chunk_days returns max years for monthly frequency
+    max_years <- compute_optimal_chunk_days(n_vars, frequency, n_plevels)
     start_year <- as.integer(format(as.Date(start_dt), "%Y"))
     end_year <- as.integer(format(as.Date(end_dt), "%Y"))
-    chunks <- lapply(start_year:end_year, function(yr) {
-      list(
-        start = paste0(yr, "-01-01"),
-        end = paste0(yr, "-12-31")
-      )
-    })
+
+    if (max_years >= (end_year - start_year + 1L)) {
+      # Entire range fits in one request
+      chunks <- list(list(
+        start = paste0(start_year, "-01-01"),
+        end = paste0(end_year, "-12-31")
+      ))
+    } else {
+      # Chunk into groups of max_years
+      chunks <- list()
+      yr <- start_year
+      while (yr <= end_year) {
+        yr_end <- min(yr + max_years - 1L, end_year)
+        chunks[[length(chunks) + 1L]] <- list(
+          start = paste0(yr, "-01-01"),
+          end = paste0(yr_end, "-12-31")
+        )
+        yr <- yr_end + 1L
+      }
+    }
+
+    if (total_fields > field_limit && verbose) {
+      message(sprintf(
+        "Request exceeds %s field limit. Auto-chunking into %d chunk(s) of up to %d year(s).",
+        format(field_limit, big.mark = ","), length(chunks), max_years
+      ))
+    }
   } else {
-    chunk_days <- if (frequency == "hourly") 31 else 365
+    chunk_days <- compute_optimal_chunk_days(n_vars, frequency, n_plevels)
+
+    if (total_fields > field_limit && verbose) {
+      message(sprintf(
+        "Request exceeds %s field limit. Auto-chunking into %d-day chunks.",
+        format(field_limit, big.mark = ","), chunk_days
+      ))
+    }
+
     chunks <- create_temporal_chunks(start_dt, end_dt, frequency, max_days_per_chunk = chunk_days)
   }
 
-  if (length(x = chunks) > 1) {
-    message(sprintf(fmt = "Processing %d temporal chunks...", length(x = chunks)))
+  # Download a single chunk, splitting automatically if CDS says "too large"
+  download_chunk <- function(chunk_start, chunk_end, chunk_id, depth = 0) {
+    chunk_file <- file.path(output_dir, sprintf(
+      "%s_chunk%s_%s.nc",
+      request_id, chunk_id, format(Sys.Date(), "%Y%m%d")
+    ))
+
+    tryCatch(
+      {
+        if (dataset_type == "single") {
+          download_era5_single(
+            variables = variables,
+            start_date = chunk_start,
+            end_date = chunk_end,
+            area = area,
+            resolution = resolution,
+            frequency = frequency,
+            output_file = chunk_file,
+            timeout = 1800,
+            retry_attempts = 5,
+            use_cache = use_cache,
+            verbose = verbose
+          )
+        } else {
+          download_era5_pressure(
+            variables = variables,
+            pressure_levels = pressure_levels,
+            start_date = chunk_start,
+            end_date = chunk_end,
+            area = area,
+            resolution = resolution,
+            frequency = frequency,
+            output_file = chunk_file,
+            use_cache = use_cache,
+            verbose = verbose
+          )
+        }
+        return(chunk_file)
+      },
+      cds_request_too_large = function(e) {
+        s <- as.Date(chunk_start)
+        en <- as.Date(chunk_end)
+        span <- as.numeric(en - s)
+
+        if (span < 30 || depth > 6) {
+          stop(
+            "Request still too large after splitting to ",
+            span, " days (depth ", depth, "). Reduce area or resolution."
+          )
+        }
+
+        mid <- s + floor(span / 2)
+        if (frequency == "monthly") {
+          mid_year <- as.integer(format(mid, "%Y"))
+          mid <- as.Date(paste0(mid_year, "-01-01"))
+          # Ensure mid is strictly between start and end
+          start_year <- as.integer(format(s, "%Y"))
+          end_year <- as.integer(format(en, "%Y"))
+          if (mid_year <= start_year) mid <- as.Date(paste0(start_year + 1, "-01-01"))
+          if (mid >= en) {
+            # Can't split a single year for monthly. Fall back to daily-style split.
+            mid <- s + floor(span / 2)
+          }
+        }
+
+        # Final guard: mid must be after start and before end
+        if (mid <= s || mid >= en) {
+          stop(
+            "Cannot split range ", chunk_start, " to ", chunk_end,
+            " further. Reduce area or resolution."
+          )
+        }
+
+        message(sprintf(
+          "Chunk too large (%s to %s). Splitting at %s (depth %d)...",
+          chunk_start, chunk_end, mid, depth + 1
+        ))
+
+        f1 <- download_chunk(
+          chunk_start, as.character(mid - 1),
+          paste0(chunk_id, "a"), depth + 1
+        )
+        f2 <- download_chunk(
+          as.character(mid), chunk_end,
+          paste0(chunk_id, "b"), depth + 1
+        )
+        return(c(f1, f2))
+      }
+    )
+  }
+
+  message(sprintf(fmt = "Processing %d temporal chunks...", length(x = chunks)))
+  if (length(chunks) > 1) {
     pb <- txtProgressBar(min = 0, max = length(x = chunks), style = 3)
+  }
 
-    all_files <- character(length(x = chunks))
-    for (i in seq_along(along.with = chunks)) {
-      chunk <- chunks[[i]]
-      chunk_file <- file.path(output_dir, sprintf(
-        "%s_chunk%d_%s.nc",
-        request_id, i, format(Sys.Date(), "%Y%m%d")
+  all_files <- list()
+  for (i in seq_along(along.with = chunks)) {
+    chunk <- chunks[[i]]
+    if (verbose) {
+      message(sprintf(
+        fmt = "\nChunk %s/%s: %s to %s",
+        i, length(x = chunks), chunk$start, chunk$end
       ))
-
-      if (verbose) {
-        message(sprintf(fmt = "\nChunk %s/%s: %s to %s", i, length(x = chunks), chunk$start, chunk$end))
-      }
-
-      if (dataset_type == "single") {
-        all_files[i] <- download_era5_single(
-          variables = variables,
-          start_date = chunk$start,
-          end_date = chunk$end,
-          area = area,
-          resolution = resolution,
-          frequency = frequency,
-          output_file = chunk_file,
-          timeout = 1800,
-          retry_attempts = 5,
-          use_cache = use_cache,
-          verbose = verbose
-        )
-      } else {
-        all_files[i] <- download_era5_pressure(
-          variables = variables,
-          pressure_levels = pressure_levels,
-          start_date = chunk$start,
-          end_date = chunk$end,
-          area = area,
-          resolution = resolution,
-          frequency = frequency,
-          output_file = chunk_file,
-          use_cache = use_cache,
-          verbose = verbose
-        )
-      }
-      setTxtProgressBar(pb, i)
     }
-    close(pb)
 
+    files <- download_chunk(chunk$start, chunk$end, as.character(i))
+    all_files <- c(all_files, files)
+
+    if (length(chunks) > 1) setTxtProgressBar(pb, i)
+  }
+  if (length(chunks) > 1) close(pb)
+
+  all_files <- unlist(all_files)
+
+  if (length(all_files) == 1) {
+    list(file = all_files[1])
+  } else {
     processed_data <- combine_netcdf_files(all_files, verbose = verbose)
     if (!save_raw) unlink(all_files)
     list(data = processed_data, files = all_files)
-  } else {
-    output_file <- file.path(output_dir, sprintf(
-      "%s_%s_%s.nc",
-      request_id, dataset_type, format(Sys.Date(), "%Y%m%d")
-    ))
-
-    if (dataset_type == "single") {
-      downloaded_file <- download_era5_single(
-        variables = variables,
-        start_date = start_dt,
-        end_date = end_dt,
-        area = area,
-        resolution = resolution,
-        frequency = frequency,
-        output_file = output_file,
-        timeout = 3600,
-        retry_attempts = 5,
-        use_cache = use_cache,
-        verbose = verbose
-      )
-    } else {
-      downloaded_file <- download_era5_pressure(
-        variables = variables,
-        pressure_levels = pressure_levels,
-        start_date = start_dt,
-        end_date = end_dt,
-        area = area,
-        resolution = resolution,
-        frequency = frequency,
-        output_file = output_file,
-        use_cache = use_cache,
-        verbose = verbose
-      )
-    }
-
-    list(file = downloaded_file)
   }
 }
 

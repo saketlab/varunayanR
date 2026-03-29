@@ -44,8 +44,10 @@ countries, 2024.
 The `variables` argument accepts shorthands `"mean"`, `"max"`, and `"min"`.
 
 ```{r download, eval = FALSE}
-countries <- c("France", "Germany", "Spain", "Norway",
-               "India", "Pakistan", "Bangladesh", "Nepal")
+countries <- c(
+  "France", "Germany", "Spain", "Norway",
+  "India", "Pakistan", "Bangladesh", "Nepal"
+)
 
 all_data <- lapply(countries, function(cntry) {
   df <- get_era5_country_temperature(
@@ -96,13 +98,19 @@ country_colors <- c(
 ggplot(temps, aes(x = month_label, y = country, fill = temperature_mean)) +
   geom_tile(color = "white", linewidth = 0.4) +
   facet_grid(region ~ ., scales = "free_y", space = "free_y") +
-  scale_fill_distiller(palette = "RdYlBu", direction = -1,
-                       name = "Mean temp (\u00B0C)") +
-  labs(x = NULL, y = NULL,
-       title = "Mean monthly temperature by country (2024)") +
+  scale_fill_distiller(
+    palette = "RdYlBu", direction = -1,
+    name = "Mean temp (\u00B0C)"
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    title = "Mean monthly temperature by country (2024)"
+  ) +
   theme_minimal(base_size = 12) +
-  theme(panel.grid = element_blank(),
-        strip.text.y = element_text(angle = 0, face = "bold"))
+  theme(
+    panel.grid = element_blank(),
+    strip.text.y = element_text(angle = 0, face = "bold")
+  )
 ```
 
 South Asian countries stay above 20 &deg;C year-round. European countries
@@ -114,17 +122,20 @@ freezing from November through March.
 ```{r trendlines, fig.height = 8}
 ggplot(temps, aes(x = month, color = country, fill = country)) +
   geom_ribbon(aes(ymin = temperature_min, ymax = temperature_max),
-              alpha = 0.15, color = NA) +
+    alpha = 0.15, color = NA
+  ) +
   geom_line(aes(y = temperature_mean), linewidth = 0.9) +
   geom_point(aes(y = temperature_mean), size = 1.5) +
-  facet_wrap(~ region, ncol = 1, scales = "free_y") +
+  facet_wrap(~region, ncol = 1, scales = "free_y") +
   scale_color_manual(values = country_colors) +
   scale_fill_manual(values = country_colors) +
   scale_x_continuous(breaks = 1:12, labels = month.abb) +
-  labs(x = NULL, y = "Temperature (\u00B0C)",
-       title = "Monthly temperature with min-max range (2024)",
-       subtitle = "Ribbon: national-average daily min to daily max",
-       color = NULL, fill = NULL) +
+  labs(
+    x = NULL, y = "Temperature (\u00B0C)",
+    title = "Monthly temperature with min-max range (2024)",
+    subtitle = "Ribbon: national-average daily min to daily max",
+    color = NULL, fill = NULL
+  ) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
 ```
@@ -140,12 +151,14 @@ temps$dtr <- temps$temperature_max - temps$temperature_min
 ggplot(temps, aes(x = month, y = dtr, color = country)) +
   geom_line(linewidth = 0.9) +
   geom_point(size = 1.5) +
-  facet_wrap(~ region, ncol = 1) +
+  facet_wrap(~region, ncol = 1) +
   scale_color_manual(values = country_colors) +
   scale_x_continuous(breaks = 1:12, labels = month.abb) +
-  labs(x = NULL, y = "Diurnal temperature range (\u00B0C)",
-       title = "Monthly diurnal temperature range (2024)",
-       color = NULL) +
+  labs(
+    x = NULL, y = "Diurnal temperature range (\u00B0C)",
+    title = "Monthly diurnal temperature range (2024)",
+    color = NULL
+  ) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
 ```
@@ -155,16 +168,20 @@ ggplot(temps, aes(x = month, y = dtr, color = country)) +
 All eight countries on a single axis, with line type separating the two regions.
 
 ```{r comparison, fig.height = 6}
-ggplot(temps, aes(x = month, y = temperature_mean,
-                  color = country, linetype = region)) +
+ggplot(temps, aes(
+  x = month, y = temperature_mean,
+  color = country, linetype = region
+)) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 1.5) +
   scale_x_continuous(breaks = 1:12, labels = month.abb) +
   scale_color_manual(values = country_colors) +
   scale_linetype_manual(values = c("Europe" = "solid", "South Asia" = "dashed")) +
-  labs(x = NULL, y = "Mean temperature (\u00B0C)",
-       title = "Europe vs South Asia: monthly temperature (2024)",
-       color = NULL, linetype = NULL) +
+  labs(
+    x = NULL, y = "Mean temperature (\u00B0C)",
+    title = "Europe vs South Asia: monthly temperature (2024)",
+    color = NULL, linetype = NULL
+  ) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
 ```
