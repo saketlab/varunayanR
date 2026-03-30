@@ -1,4 +1,20 @@
-#' ERA5 data download functions using ecmwfr
+# ERA5 data download functions using ecmwfr
+
+# Signal cds_request_too_large condition if the error looks size-related.
+# "Request has failed" is only treated as size-related for ranges > 400 days.
+signal_if_too_large <- function(err_msg, start_date, end_date) {
+  is_size <- grepl("cost limits|too large|request is too large", err_msg, ignore.case = TRUE)
+  range_days <- as.numeric(as.Date(end_date) - as.Date(start_date))
+  is_generic <- grepl("Request has failed", err_msg) && range_days > 400
+  if (is_size || is_generic) {
+    cond <- simpleCondition(
+      message = paste0("CDS request too large: ", err_msg),
+      call = sys.call(-2)
+    )
+    class(cond) <- c("cds_request_too_large", "error", "condition")
+    stop(cond)
+  }
+}
 
 # Variables not available in the monthly-means product (require hourly reanalysis)
 .MONTHLY_MEANS_UNSUPPORTED <- c(
@@ -121,7 +137,7 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
       variable = as.list(variables),
       year = years,
       month = months,
-      time = list("12:00")
+      time = list("00:00")
     )
   } else {
     date_seq <- seq(from = as.Date(x = start_date), to = as.Date(x = end_date), by = "day")
@@ -249,9 +265,8 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
     }
 
     if (failures > effective_retries) {
-      if (use_monthly_means && !is.null(last_error) &&
-        grepl("licence|license|permission denied|403|cost limits", last_error$message, ignore.case = TRUE)) {
-        message("Monthly-means dataset not available (license not accepted?). Falling back to regular dataset...")
+      if (use_monthly_means && !is.null(last_error)) {
+        message("Monthly-means request failed. Falling back to regular reanalysis dataset...")
         use_monthly_means <- FALSE
 
         date_seq <- seq(from = as.Date(x = start_date), to = as.Date(x = end_date), by = "day")
@@ -269,19 +284,7 @@ download_era5_single <- function(variables, start_date, end_date, area = NULL,
       }
       err_msg <- if (!is.null(last_error)) last_error$message else "unknown error"
 
-      # Signal size-related failures so callers can split and retry
-      # Only treat "Request has failed" as splittable if the range spans > 1 year
-      is_size_error <- grepl("cost limits|too large|request is too large", err_msg, ignore.case = TRUE)
-      range_days <- as.numeric(as.Date(end_date) - as.Date(start_date))
-      is_generic_fail <- grepl("Request has failed", err_msg) && range_days > 400
-      if (is_size_error || is_generic_fail) {
-        cond <- simpleCondition(
-          message = paste0("CDS request too large: ", err_msg),
-          call = sys.call(-1)
-        )
-        class(cond) <- c("cds_request_too_large", "error", "condition")
-        stop(cond)
-      }
+      signal_if_too_large(err_msg, start_date, end_date)
 
       stop(
         sprintf("Download failed after %d attempts: ", failures),
@@ -415,18 +418,7 @@ download_era5_pressure <- function(variables, pressure_levels, start_date, end_d
         )
       }
 
-      # Signal size-related failures so callers can split and retry
-      is_size_error <- grepl("cost limits|too large|request is too large", e$message, ignore.case = TRUE)
-      range_days <- as.numeric(as.Date(end_date) - as.Date(start_date))
-      is_generic_fail <- grepl("Request has failed", e$message) && range_days > 400
-      if (is_size_error || is_generic_fail) {
-        cond <- simpleCondition(
-          message = paste0("CDS request too large: ", e$message),
-          call = sys.call(-1)
-        )
-        class(cond) <- c("cds_request_too_large", "error", "condition")
-        stop(cond)
-      }
+      signal_if_too_large(e$message, start_date, end_date)
 
       if (grepl(pattern = "timeout|time.*out", e$message, ignore.case = TRUE)) {
         stop(

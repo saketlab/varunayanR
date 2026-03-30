@@ -59,7 +59,8 @@ get_era5_country_temperature("India", "2023-06-01", "2023-06-30")
 
 # Mean and max temperature for USA
 get_era5_country_temperature("USA", "2023-01-01", "2023-12-31",
-  variables = c("mean", "max"))
+  variables = c("mean", "max")
+)
 
 # Using an sf object directly
 library(sf)

@@ -3,8 +3,7 @@
 \name{SetupCdsCredentials}
 \alias{SetupCdsCredentials}
 \alias{setup_cds_credentials}
-\title{ERA5 data download functions using ecmwfr
-Set up CDS credentials for ERA5 data access}
+\title{Set up CDS credentials for ERA5 data access}
 \usage{
 SetupCdsCredentials(...)
 

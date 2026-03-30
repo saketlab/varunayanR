@@ -22,60 +22,42 @@ estimate_cds_fields <- function(n_variables, start_date, end_date, frequency,
                                 n_pressure_levels = 1L) {
   s <- as.Date(start_date)
   e <- as.Date(end_date)
-  n_days <- as.integer(e - s) + 1L
-
-  times_per_day <- switch(frequency,
-    "hourly"  = 24L,
-    "daily"   = 1L,
-    "monthly" = NULL, # handled separately
-    24L
-  )
 
   if (frequency == "monthly") {
-    # Monthly means: one time step per month
-    month_seq <- seq(s, e, by = "month")
-    n_timesteps <- length(month_seq)
+    n_timesteps <- (as.integer(format(e, "%Y")) - as.integer(format(s, "%Y"))) * 12L +
+      (as.integer(format(e, "%m")) - as.integer(format(s, "%m"))) + 1L
   } else {
+    n_days <- as.integer(e - s) + 1L
+    times_per_day <- if (frequency == "hourly") 24L else 1L
     n_timesteps <- n_days * times_per_day
   }
 
   as.integer(n_variables) * n_timesteps * as.integer(n_pressure_levels)
 }
 
-#' Compute optimal chunk size in days to stay within CDS field limits
+#' Compute optimal chunk size to stay within CDS field limits
 #'
-#' Given request parameters, calculates the maximum number of days per chunk
-#' so the field count stays safely under the CDS limit (using 90% of the limit
-#' as headroom).
+#' Uses 90% of the CDS limit as headroom. Returns max years for monthly
+#' frequency, max days for hourly/daily.
 #'
 #' @param n_variables Number of variables
 #' @param frequency "hourly", "daily", or "monthly"
 #' @param n_pressure_levels Number of pressure levels (1 for single-level)
-#' @return Integer max days per chunk, or NULL for monthly (use year-based chunking)
+#' @return Integer: max years (monthly) or max days (hourly/daily) per chunk
 #' @keywords internal
-compute_optimal_chunk_days <- function(n_variables, frequency,
+compute_optimal_chunk_size <- function(n_variables, frequency,
                                        n_pressure_levels = 1L) {
+  n_vars <- as.integer(n_variables) * as.integer(n_pressure_levels)
+
   if (frequency == "monthly") {
-    # Monthly means: limit is 10,000 fields
-    # fields = n_vars * n_months * n_pressure
-    # Use 90% headroom
-    safe_limit <- floor(CDS_FIELD_LIMIT_MONTHLY * 0.9)
-    max_months <- safe_limit %/% (as.integer(n_variables) * as.integer(n_pressure_levels))
-    # Convert to approximate years; minimum 1 year
-    max_years <- max(max_months %/% 12L, 1L)
-    return(max_years) # return years, not days, for monthly
+    # CDS monthly-means product is structured per-year internally.
+    # Multi-year requests time out regardless of field count.
+    return(1L)
   }
 
   times_per_day <- if (frequency == "hourly") 24L else 1L
-  safe_limit <- floor(CDS_FIELD_LIMIT_HOURLY * 0.9)
-  fields_per_day <- as.integer(n_variables) * times_per_day * as.integer(n_pressure_levels)
-
-  max_days <- safe_limit %/% fields_per_day
-  # Clamp to reasonable bounds
-  max_days <- max(max_days, 1L)
-  max_days <- min(max_days, 3650L) # cap at ~10 years
-
-  as.integer(max_days)
+  max_days <- CDS_FIELD_LIMIT_HOURLY %/% (n_vars * times_per_day)
+  as.integer(min(max(max_days, 1L), 3650L))
 }
 
 # Temperature variables that need Kelvin to Celsius conversion
@@ -166,8 +148,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
   }
 
   if (frequency == "monthly") {
-    # compute_optimal_chunk_days returns max years for monthly frequency
-    max_years <- compute_optimal_chunk_days(n_vars, frequency, n_plevels)
+    max_years <- compute_optimal_chunk_size(n_vars, frequency, n_plevels)
     start_year <- as.integer(format(as.Date(start_dt), "%Y"))
     end_year <- as.integer(format(as.Date(end_dt), "%Y"))
 
@@ -198,7 +179,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
       ))
     }
   } else {
-    chunk_days <- compute_optimal_chunk_days(n_vars, frequency, n_plevels)
+    chunk_days <- compute_optimal_chunk_size(n_vars, frequency, n_plevels)
 
     if (total_fields > field_limit && verbose) {
       message(sprintf(
