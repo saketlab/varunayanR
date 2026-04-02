@@ -95,6 +95,10 @@ navbar:
         href: articles/heat-stress-indices.html
       - text: Country-level temperature trends
         href: articles/country-temperature.html
+      - text: HadEX3 Climate Extremes
+        href: articles/hadex3-climate-extremes.html
+      - text: CRU TS vs ERA5 Comparison
+        href: articles/cru-ts-comparison.html
 
     news:
       text: Changelog
@@ -112,6 +116,22 @@ reference:
   - starts_with("era5ify")
   - starts_with("ERA5ify")
   - setup_cds_credentials
+
+- title: "HadEX3 climate extremes functions"
+  desc: "Download ETCCDI climate extremes from the Met Office HadEX3 dataset"
+  contents:
+  - starts_with("hadex3_")
+  - starts_with("HadEX3")
+  - list_hadex3_indices
+  - ListHadEX3Indices
+
+- title: "CRU TS gridded climate functions"
+  desc: "Download monthly gridded climate data from the CRU TS v4.07 dataset"
+  contents:
+  - starts_with("cru_ts_")
+  - starts_with("CRUTS")
+  - list_cru_ts_variables
+  - ListCRUTSVariables
 
 - title: "IMD data functions"
   desc: "Download gridded climate data from Indian Meteorological Department"

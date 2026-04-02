@@ -77,6 +77,32 @@ GetCacheDir <- function(...) get_cache_dir(...)
 #' @export
 GetERA5CountryTemperature <- function(...) get_era5_country_temperature(...)
 
+# HadEX3 functions
+#' @rdname hadex3_bbox
+#' @export
+HadEX3Bbox <- function(...) hadex3_bbox(...)
+
+#' @rdname hadex3_geojson
+#' @export
+HadEX3Geojson <- function(...) hadex3_geojson(...)
+
+#' @rdname list_hadex3_indices
+#' @export
+ListHadEX3Indices <- function(...) list_hadex3_indices(...)
+
+# CRU TS functions
+#' @rdname cru_ts_bbox
+#' @export
+CRUTSBbox <- function(...) cru_ts_bbox(...)
+
+#' @rdname cru_ts_geojson
+#' @export
+CRUTSGeojson <- function(...) cru_ts_geojson(...)
+
+#' @rdname list_cru_ts_variables
+#' @export
+ListCRUTSVariables <- function(...) list_cru_ts_variables(...)
+
 # System utilities
 
 #' @rdname check_system_readiness
