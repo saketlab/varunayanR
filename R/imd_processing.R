@@ -103,12 +103,17 @@ read_imd_rainfall <- function(file_path, resolution, year) {
   if (inherits(rainfall_data, "stars")) {
     df <- as.data.frame(rainfall_data)
 
+    names(df) <- tolower(names(df))
     name_map <- c(
       lon = "longitude", lat = "latitude", time = "date",
-      x = "longitude", y = "latitude", Time = "date"
+      x = "longitude", y = "latitude"
     )
     for (old in names(name_map)) {
       if (old %in% names(df)) names(df)[names(df) == old] <- name_map[old]
+    }
+
+    for (col in names(df)) {
+      if (inherits(df[[col]], "units")) df[[col]] <- as.numeric(df[[col]])
     }
 
     rain_vars <- c("rf", "rainfall", "rain", "precip")
