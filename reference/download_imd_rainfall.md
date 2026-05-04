@@ -1,0 +1,54 @@
+# IMD data download functions Download IMD gridded rainfall data
+
+Downloads daily gridded rainfall data from IMD at specified resolution.
+
+## Usage
+
+``` r
+download_imd_rainfall(
+  start_year,
+  end_year,
+  resolution = 0.25,
+  output_dir = tempdir(),
+  use_cache = TRUE
+)
+```
+
+## Arguments
+
+- start_year:
+
+  Start year.
+
+- end_year:
+
+  End year.
+
+- resolution:
+
+  Spatial resolution: 0.25 or 1.0 degrees.
+
+- output_dir:
+
+  Directory to save downloaded files.
+
+- use_cache:
+
+  Whether to use cached data if available (default: TRUE).
+
+## Value
+
+Character vector of downloaded file paths
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Download 0.25 degree rainfall for 2023-2025
+files <- download_imd_rainfall(
+  start_year = 2023,
+  end_year = 2025,
+  resolution = 0.25
+)
+} # }
+```
