@@ -2,8 +2,7 @@
 % Please edit documentation in R/processing.R
 \name{process_netcdf_to_dataframe}
 \alias{process_netcdf_to_dataframe}
-\title{NetCDF processing functions for ERA5 data
-Process NetCDF file and extract data as data.frame}
+\title{Process NetCDF file and extract data as data.frame}
 \usage{
 process_netcdf_to_dataframe(netcdf_file)
 }
@@ -14,6 +13,5 @@ process_netcdf_to_dataframe(netcdf_file)
 data.frame with processed climate data
 }
 \description{
-NetCDF processing functions for ERA5 data
 Process NetCDF file and extract data as data.frame
 }

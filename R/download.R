@@ -461,12 +461,12 @@ download_era5_pressure <- function(variables, pressure_levels, start_date, end_d
   final_file
 }
 
-# Helper to extract ZIP file to NetCDF
 extract_zip_to_nc <- function(zip_file, output_dir) {
   message(sprintf(fmt = "Extracting ZIP file: %s", basename(path = zip_file)))
 
   temp_extract_dir <- file.path(output_dir, "extracted")
   dir.create(temp_extract_dir, showWarnings = FALSE)
+  on.exit(unlink(temp_extract_dir, recursive = TRUE), add = TRUE)
 
   unzip(zip_file, exdir = temp_extract_dir)
 
@@ -477,19 +477,84 @@ extract_zip_to_nc <- function(zip_file, output_dir) {
   }
 
   if (length(x = nc_files) > 1) {
-    warning(sprintf(fmt = "Multiple NetCDF files found, using first one: %s", basename(path = nc_files[1])), call. = FALSE)
+    message(sprintf(fmt = "Merging %d NetCDF files from ZIP", length(x = nc_files)))
+    final_file <- merge_nc_files(nc_files, output_dir)
+  } else {
+    final_file <- file.path(output_dir, basename(path = nc_files[1]))
+    file.copy(nc_files[1], final_file, overwrite = TRUE)
   }
 
-  final_file <- file.path(output_dir, basename(path = nc_files[1]))
-  file.copy(nc_files[1], final_file, overwrite = TRUE)
-
-  unlink(temp_extract_dir, recursive = TRUE)
   unlink(zip_file)
 
   final_file
 }
 
-# Helper to find downloaded file (may be .nc or .zip) and extract if needed
+merge_nc_files <- function(nc_files, output_dir) {
+  all_vars <- list()
+  shared_dims <- NULL
+
+  for (f in nc_files) {
+    nc <- ncdf4::nc_open(f)
+    tryCatch({
+      dim_names <- names(nc$dim)
+      climate_vars <- setdiff(names(nc$var), .NC_METADATA_VARS)
+
+      for (vname in climate_vars) {
+        vdata <- ncdf4::ncvar_get(nc, vname)
+        vunits <- tryCatch(ncdf4::ncatt_get(nc, vname, "units")$value, error = function(e) "")
+        all_vars[[vname]] <- list(data = vdata, units = vunits, dims = nc$var[[vname]]$dim)
+      }
+
+      if (is.null(shared_dims)) {
+        shared_dims <- list()
+        for (dname in dim_names) {
+          d <- nc$dim[[dname]]
+          shared_dims[[dname]] <- list(vals = d$vals, units = d$units, unlim = d$unlim)
+        }
+      }
+    }, finally = {
+      ncdf4::nc_close(nc)
+    })
+  }
+
+  if (length(all_vars) == 0) stop("No climate variables found in NetCDF files")
+
+  merged_file <- file.path(output_dir, paste0("merged_", basename(nc_files[1])))
+
+  nc_dims <- list()
+  for (dname in names(shared_dims)) {
+    d <- shared_dims[[dname]]
+    nc_dims[[dname]] <- ncdf4::ncdim_def(dname, d$units, d$vals, unlim = d$unlim)
+  }
+
+  nc_var_defs <- list()
+  for (vname in names(all_vars)) {
+    v <- all_vars[[vname]]
+    var_dims <- list()
+    for (vd in v$dims) {
+      if (vd$name %in% names(nc_dims)) {
+        var_dims <- c(var_dims, list(nc_dims[[vd$name]]))
+      }
+    }
+    nc_var_defs[[vname]] <- ncdf4::ncvar_def(vname, v$units, var_dims, missval = NA)
+  }
+
+  nc_out <- ncdf4::nc_create(merged_file, nc_var_defs)
+  tryCatch({
+    for (vname in names(all_vars)) {
+      ncdf4::ncvar_put(nc_out, vname, all_vars[[vname]]$data)
+    }
+  }, error = function(e) {
+    unlink(merged_file)
+    stop(e)
+  }, finally = {
+    ncdf4::nc_close(nc_out)
+  })
+
+  message(sprintf(fmt = "Merged %d variables into: %s", length(all_vars), basename(merged_file)))
+  merged_file
+}
+
 find_and_extract_download <- function(output_file, target) {
   base_name <- file_path_sans_ext(basename(path = output_file))
   base_dir <- dirname(path = output_file)
@@ -514,28 +579,7 @@ find_and_extract_download <- function(output_file, target) {
 
   final_file <- actual_file
   if (file_ext(actual_file) == "zip") {
-    message(sprintf(fmt = "Extracting ZIP file: %s", basename(path = actual_file)))
-
-    temp_extract_dir <- file.path(base_dir, "extracted")
-    dir.create(temp_extract_dir, showWarnings = FALSE)
-
-    unzip(actual_file, exdir = temp_extract_dir)
-
-    nc_files <- list.files(temp_extract_dir, pattern = "\\.nc$", full.names = TRUE)
-
-    if (length(x = nc_files) == 0) {
-      stop("No NetCDF files found in ZIP archive: ", actual_file)
-    }
-
-    if (length(x = nc_files) > 1) {
-      warning(sprintf(fmt = "Multiple NetCDF files found, using first one: %s", basename(path = nc_files[1])), call. = FALSE)
-    }
-
-    final_file <- output_file
-    file.copy(nc_files[1], final_file, overwrite = TRUE)
-
-    unlink(temp_extract_dir, recursive = TRUE)
-    unlink(actual_file)
+    final_file <- extract_zip_to_nc(actual_file, base_dir)
   }
 
   final_file

@@ -22,5 +22,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Saket Choudhary \email{saketc@iitb.ac.in}
 
+Authors:
+\itemize{
+  \item Saket Choudhary \email{saketc@iitb.ac.in}
+}
+
 }
 \keyword{internal}

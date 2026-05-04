@@ -1,5 +1,3 @@
-#' NetCDF processing functions for ERA5 data
-
 #' Process NetCDF file and extract data as data.frame
 #'
 #' @param netcdf_file Character string path to NetCDF file
@@ -12,8 +10,23 @@ process_netcdf_to_dataframe <- function(netcdf_file) {
   start_time_total <- Sys.time()
 
   start_time <- Sys.time()
+  nc_vars <- tryCatch(
+    {
+      nc_tmp <- ncdf4::nc_open(netcdf_file)
+      tryCatch(
+        setdiff(names(nc_tmp$var), .NC_METADATA_VARS),
+        finally = ncdf4::nc_close(nc_tmp)
+      )
+    },
+    error = function(e) NULL
+  )
+
   nc_data <- tryCatch(
-    read_ncdf(netcdf_file),
+    if (!is.null(nc_vars) && length(nc_vars) > 0) {
+      read_ncdf(netcdf_file, var = nc_vars)
+    } else {
+      read_ncdf(netcdf_file)
+    },
     error = function(e) {
       # Handle time conversion failures with fallback chain
       if (grepl(pattern = "cannot convert.*into seconds", e$message)) {

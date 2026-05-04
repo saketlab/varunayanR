@@ -65,9 +65,10 @@ cru_tmp <- cru_ts_bbox(
 
 ```{r load_data}
 saved <- readRDS(system.file("extdata", "india_era5_cru_comparison.rds",
-                              package = "varunayan"))
+  package = "varunayan"
+))
 era5_tmp <- saved$era5_tmp
-cru_tmp  <- saved$cru_tmp
+cru_tmp <- saved$cru_tmp
 ```
 
 ## Monthly Time Series
@@ -106,7 +107,7 @@ ggplot(temp_all, aes(x = date, y = temp, color = source)) +
 ```{r scatter, fig.width = 5, fig.height = 5}
 temp_wide <- inner_join(
   era5_monthly |> select(year, month, ERA5 = temp),
-  cru_monthly  |> select(year, month, `CRU TS` = temp),
+  cru_monthly |> select(year, month, `CRU TS` = temp),
   by = c("year", "month")
 )
 
@@ -116,8 +117,10 @@ bias <- mean(temp_wide$ERA5 - temp_wide$`CRU TS`, na.rm = TRUE)
 ggplot(temp_wide, aes(x = `CRU TS`, y = ERA5)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey40") +
   geom_point(alpha = 0.5, size = 1.8, color = "#34495E") +
-  geom_smooth(method = "lm", se = TRUE,
-              color = "#E74C3C", fill = "#E74C3C", alpha = 0.15) +
+  geom_smooth(
+    method = "lm", se = TRUE,
+    color = "#E74C3C", fill = "#E74C3C", alpha = 0.15
+  ) +
   coord_fixed() +
   labs(
     x = "CRU TS (\u00b0C)", y = "ERA5 (\u00b0C)",
@@ -157,7 +160,7 @@ ERA5 is averaged to the CRU TS 0.5° grid for a direct comparison.
 # CRU TS grid centers: floor(x/0.5)*0.5 + 0.25 → 6.25, 6.75, 7.25, ...
 era5_spatial <- era5_tmp |>
   mutate(
-    lat_bin = floor(latitude  / 0.5) * 0.5 + 0.25,
+    lat_bin = floor(latitude / 0.5) * 0.5 + 0.25,
     lon_bin = floor(longitude / 0.5) * 0.5 + 0.25
   ) |>
   group_by(lat_bin, lon_bin) |>
@@ -175,8 +178,10 @@ spatial_combined <- inner_join(
 
 p_era5 <- ggplot(spatial_combined, aes(x = lon_bin, y = lat_bin, fill = era5_mean)) +
   geom_tile() +
-  scale_fill_distiller(palette = "RdYlBu", direction = -1,
-                       name = "\u00b0C", limits = c(10, 36)) +
+  scale_fill_distiller(
+    palette = "RdYlBu", direction = -1,
+    name = "\u00b0C", limits = c(10, 36)
+  ) +
   coord_fixed() +
   labs(title = "ERA5 Annual Mean") +
   theme_void(base_size = 10) +
@@ -184,8 +189,10 @@ p_era5 <- ggplot(spatial_combined, aes(x = lon_bin, y = lat_bin, fill = era5_mea
 
 p_cru <- ggplot(spatial_combined, aes(x = lon_bin, y = lat_bin, fill = cru_mean)) +
   geom_tile() +
-  scale_fill_distiller(palette = "RdYlBu", direction = -1,
-                       name = "\u00b0C", limits = c(10, 36)) +
+  scale_fill_distiller(
+    palette = "RdYlBu", direction = -1,
+    name = "\u00b0C", limits = c(10, 36)
+  ) +
   coord_fixed() +
   labs(title = "CRU TS Annual Mean") +
   theme_void(base_size = 10) +
@@ -194,9 +201,11 @@ p_cru <- ggplot(spatial_combined, aes(x = lon_bin, y = lat_bin, fill = cru_mean)
 bias_lim <- max(abs(spatial_combined$bias), na.rm = TRUE)
 p_bias <- ggplot(spatial_combined, aes(x = lon_bin, y = lat_bin, fill = bias)) +
   geom_tile() +
-  scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
-                       midpoint = 0, limits = c(-bias_lim, bias_lim),
-                       name = "\u00b0C") +
+  scale_fill_gradient2(
+    low = "#2166AC", mid = "white", high = "#B2182B",
+    midpoint = 0, limits = c(-bias_lim, bias_lim),
+    name = "\u00b0C"
+  ) +
   coord_fixed() +
   labs(title = "ERA5 \u2212 CRU TS") +
   theme_void(base_size = 10) +

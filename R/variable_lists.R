@@ -127,6 +127,9 @@ rate_vars <- c(
   "avg_vimdf", "average_vertically_integrated_moisture_divergence"
 )
 
+# Non-climate metadata variables that CDS may embed in NetCDF files
+.NC_METADATA_VARS <- c("number", "expver")
+
 #' Columns to exclude from aggregation
 #'
 #' These are coordinate and metadata columns that should not be aggregated.
@@ -134,7 +137,7 @@ rate_vars <- c(
 #' @export
 exclude_cols <- c(
   "latitude", "longitude", "date", "time", "hour",
-  "expver", "number", "valid_time", "datetime", "variable"
+  .NC_METADATA_VARS, "valid_time", "datetime", "variable"
 )
 
 #' Check if a variable should be summed
