@@ -1,7 +1,4 @@
 #' IMD data download functions
-#'
-#' Functions for downloading gridded data from India Meteorological Department (IMD)
-#' Based on analysis of actual IMD data format.
 
 #' Download IMD gridded rainfall data
 #'
@@ -419,8 +416,7 @@ download_imd_year <- function(year, php_file, param_name, base_url, output_file,
 
 #' Get IMD grid specifications
 #'
-#' Returns the grid specifications for different IMD datasets based on
-#' analysis of actual data.
+#' Returns grid specifications for different IMD datasets.
 #'
 #' @param dataset Dataset identifier: "rainfall_0.25",
 #'   "rainfall_1.0", "tmax_1.0", "tmin_1.0".

@@ -2,7 +2,8 @@
 % Please edit documentation in R/imd_download.R
 \name{download_imd_rainfall}
 \alias{download_imd_rainfall}
-\title{IMD data download functions}
+\title{IMD data download functions
+Download IMD gridded rainfall data}
 \usage{
 download_imd_rainfall(
   start_year,
@@ -27,11 +28,6 @@ download_imd_rainfall(
 Character vector of downloaded file paths
 }
 \description{
-Functions for downloading gridded data from India Meteorological Department (IMD)
-Based on analysis of actual IMD data format.
-Download IMD gridded rainfall data
-}
-\details{
 Downloads daily gridded rainfall data from IMD at specified resolution.
 }
 \examples{

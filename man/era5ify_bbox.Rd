@@ -3,7 +3,7 @@
 \name{ERA5ifyBbox}
 \alias{ERA5ifyBbox}
 \alias{era5ify_bbox}
-\title{ERA5 data download and processing for bounding box regions}
+\title{Download and process ERA5 data for a bounding box}
 \usage{
 ERA5ifyBbox(...)
 
@@ -75,7 +75,7 @@ data.frame with processed climate data. When \code{convert_units = TRUE}:
 }
 }
 \description{
-Downloads and processes ERA5 climate data for regions defined by bounding boxes.
+Download and process ERA5 data for a bounding box
 }
 \examples{
 \dontrun{

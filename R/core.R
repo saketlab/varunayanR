@@ -315,9 +315,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
   }
 }
 
-#' ERA5 data download and processing for GeoJSON regions
-#'
-#' Downloads and processes ERA5 climate data for regions defined by GeoJSON files.
+#' Download and process ERA5 data for a GeoJSON region
 #'
 #' @param request_id Unique identifier for the data request
 #' @param variables List of ERA5 variables to download
@@ -401,9 +399,7 @@ era5ify_geojson <- function(request_id, variables, start_date, end_date, json_fi
   processed_data
 }
 
-#' ERA5 data download and processing for bounding box regions
-#'
-#' Downloads and processes ERA5 climate data for regions defined by bounding boxes.
+#' Download and process ERA5 data for a bounding box
 #'
 #' @param request_id Unique identifier for the data request.
 #' @param variables List of ERA5 variables to download.
@@ -499,9 +495,7 @@ era5ify_bbox <- function(request_id, variables, start_date, end_date,
   processed_data
 }
 
-#' ERA5 data download and processing for point locations
-#'
-#' Downloads and processes ERA5 climate data for specific point locations.
+#' Download and process ERA5 data for a point location
 #'
 #' @param request_id Unique identifier for the data request.
 #' @param variables List of ERA5 variables to download.

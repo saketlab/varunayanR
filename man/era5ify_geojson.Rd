@@ -68,8 +68,6 @@ data.frame with processed climate data. When \code{convert_units = TRUE}:
 }
 \description{
 PascalCase aliases for all exported functions for backward compatibility.
-
-Downloads and processes ERA5 climate data for regions defined by GeoJSON files.
 }
 \examples{
 \dontrun{

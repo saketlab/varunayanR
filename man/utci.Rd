@@ -19,9 +19,8 @@ utci(temp_c, wind_speed, dewpoint_c, tmrt = NULL)
 UTCI in Celsius
 }
 \description{
-Calculates UTCI using the polynomial approximation from Bröde et al. (2012).
-UTCI is the most comprehensive thermal comfort index, based on a multi-node
-model of human thermoregulation.
+Calculates UTCI using the polynomial approximation from Bröde et al. (2012),
+based on a multi-node model of human thermoregulation.
 }
 \examples{
 utci(30, wind_speed = 2, dewpoint_c = 20)

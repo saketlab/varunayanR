@@ -1,15 +1,12 @@
-#' Variable lists for ERA5 data aggregation
-#'
-#' This module defines which ERA5 variables should use specific aggregation methods
-#' when performing temporal aggregation (daily, monthly, yearly).
+#' ERA5 variable aggregation rules
 #'
 #' @name variable_lists
 NULL
 
 #' Variables that should be summed over time
 #'
-#' These are accumulation variables like precipitation and radiation that should
-#' be summed when aggregating to longer time periods.
+#' Accumulation variables (precipitation, radiation) that use sum for temporal
+#' aggregation.
 #'
 #' @export
 sum_vars <- c(
@@ -56,8 +53,6 @@ sum_vars <- c(
 
 #' Variables that should use maximum aggregation
 #'
-#' These variables represent maximum values that should use max() when aggregating.
-#'
 #' @export
 max_vars <- c(
   "mx2t", "maximum_2m_temperature",
@@ -68,8 +63,6 @@ max_vars <- c(
 
 #' Variables that should use minimum aggregation
 #'
-#' These variables represent minimum values that should use min() when aggregating.
-#'
 #' @export
 min_vars <- c(
   "mn2t", "minimum_2m_temperature",
@@ -77,9 +70,6 @@ min_vars <- c(
 )
 
 #' Rate variables that should be averaged
-#'
-#' These are rate variables that should be averaged (not summed) when aggregating
-#' to longer time periods.
 #'
 #' @export
 rate_vars <- c(

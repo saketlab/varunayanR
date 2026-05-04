@@ -2,8 +2,7 @@
 % Please edit documentation in R/variable_lists.R
 \name{variable_lists}
 \alias{variable_lists}
-\title{Variable lists for ERA5 data aggregation}
+\title{ERA5 variable aggregation rules}
 \description{
-This module defines which ERA5 variables should use specific aggregation methods
-when performing temporal aggregation (daily, monthly, yearly).
+ERA5 variable aggregation rules
 }

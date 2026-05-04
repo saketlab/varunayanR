@@ -25,8 +25,7 @@ Data frame with columns: temp_c, dewpoint_c, rh, wet_bulb, heat_index,
 wbgt, humidex
 }
 \description{
-Convenience function to calculate all heat stress indices at once from
-temperature and dewpoint (standard ERA5 output).
+Calculate all heat stress indices from temperature and dewpoint.
 }
 \examples{
 calc_heat_indices(35, 25)

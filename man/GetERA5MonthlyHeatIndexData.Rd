@@ -90,8 +90,7 @@ get_era5_monthly_heat_data(
 data.frame with monthly mean values for each grid point
 }
 \description{
-Wrapper for GetERA5DailyHeatIndexData that takes year and month parameters
-and returns monthly aggregated heat stress indices.
+Download ERA5 heat stress indices aggregated to a given month.
 }
 \examples{
 \dontrun{

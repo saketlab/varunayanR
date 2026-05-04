@@ -7,6 +7,5 @@
 rate_vars
 }
 \description{
-These are rate variables that should be averaged (not summed) when aggregating
-to longer time periods.
+Rate variables that should be averaged
 }

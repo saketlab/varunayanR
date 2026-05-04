@@ -47,8 +47,8 @@ requested variable (e.g., \code{temperature_mean}, \code{temperature_max},
 \code{temperature_min}). Temperature values are in Celsius.
 }
 \description{
-Convenience function to download and aggregate ERA5 temperature data for a
-country. Resolves the country boundary, downloads monthly data via
+Download and aggregate ERA5 temperature data for a country.
+Resolves the country boundary, downloads monthly data via
 \code{\link[=era5ify_geojson]{era5ify_geojson()}}, and returns area-weighted (cosine-latitude) country-level
 averages by year and month.
 }

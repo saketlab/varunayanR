@@ -7,5 +7,5 @@
 max_vars
 }
 \description{
-These variables represent maximum values that should use max() when aggregating.
+Variables that should use maximum aggregation
 }

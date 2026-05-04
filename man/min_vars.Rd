@@ -7,5 +7,5 @@
 min_vars
 }
 \description{
-These variables represent minimum values that should use min() when aggregating.
+Variables that should use minimum aggregation
 }

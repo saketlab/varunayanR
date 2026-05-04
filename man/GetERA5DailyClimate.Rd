@@ -59,8 +59,8 @@ get_era5_daily_climate(
 data.frame with date, latitude, longitude, and requested variables
 }
 \description{
-Flexible function to download ERA5 climate variables for a region.
-Supports temperature, humidity, wet bulb, wind, and solar radiation.
+Download ERA5 climate variables (temperature, humidity, wet bulb, wind,
+solar radiation) for a region.
 }
 \examples{
 \dontrun{

@@ -19,8 +19,8 @@ environment variable \code{CDS_API_KEY} or ~/.cdsapirc file.}
 Invisible TRUE if successful
 }
 \description{
-This function helps users set up their Copernicus Climate Data Store (CDS) credentials
-for downloading ERA5 data. Credentials are checked in the following order:
+Sets up Copernicus Climate Data Store (CDS) credentials for ERA5 downloads.
+Credentials are checked in the following order:
 \enumerate{
 \item Directly provided \code{key} argument
 \item \code{CDS_API_KEY} environment variable

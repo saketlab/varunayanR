@@ -2,8 +2,8 @@ utils::globalVariables(c("weight", "col_name"))
 
 #' Get ERA5 country-level temperature data
 #'
-#' Convenience function to download and aggregate ERA5 temperature data for a
-#' country. Resolves the country boundary, downloads monthly data via
+#' Download and aggregate ERA5 temperature data for a country.
+#' Resolves the country boundary, downloads monthly data via
 #' [era5ify_geojson()], and returns area-weighted (cosine-latitude) country-level
 #' averages by year and month.
 #'

@@ -99,9 +99,8 @@ wind_speed, rh, wet_bulb, heat_index, wbgt, utci, humidex, wbgt_risk,
 heat_index_risk, utci_stress. When solar_load=TRUE, also includes solar_radiation.
 }
 \description{
-Downloads ERA5 temperature, dewpoint, and wind data for a region and calculates
-all heat stress indices (relative humidity, wet bulb temperature, heat index,
-WBGT, UTCI, and humidex).
+Download ERA5 temperature, dewpoint, and wind data for a region and calculate
+heat stress indices.
 }
 \examples{
 \dontrun{

@@ -7,6 +7,6 @@
 sum_vars
 }
 \description{
-These are accumulation variables like precipitation and radiation that should
-be summed when aggregating to longer time periods.
+Accumulation variables (precipitation, radiation) that use sum for temporal
+aggregation.
 }

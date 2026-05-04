@@ -3,7 +3,7 @@
 \name{ERA5ifyPoint}
 \alias{ERA5ifyPoint}
 \alias{era5ify_point}
-\title{ERA5 data download and processing for point locations}
+\title{Download and process ERA5 data for a point location}
 \usage{
 ERA5ifyPoint(...)
 
@@ -66,7 +66,7 @@ data.frame with processed climate data. When \code{convert_units = TRUE}:
 }
 }
 \description{
-Downloads and processes ERA5 climate data for specific point locations.
+Download and process ERA5 data for a point location
 }
 \examples{
 \dontrun{

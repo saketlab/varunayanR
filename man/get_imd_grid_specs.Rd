@@ -14,8 +14,7 @@ get_imd_grid_specs(dataset)
 List with grid specifications.
 }
 \description{
-Returns the grid specifications for different IMD datasets based on
-analysis of actual data.
+Returns grid specifications for different IMD datasets.
 }
 \examples{
 specs <- get_imd_grid_specs("rainfall_0.25")

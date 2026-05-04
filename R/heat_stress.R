@@ -218,9 +218,8 @@ mean_radiant_temperature <- function(temp_c, solar_radiation = NULL, wind_speed 
 
 #' Calculate UTCI (Universal Thermal Climate Index)
 #'
-#' Calculates UTCI using the polynomial approximation from Bröde et al. (2012).
-#' UTCI is the most comprehensive thermal comfort index, based on a multi-node
-#' model of human thermoregulation.
+#' Calculates UTCI using the polynomial approximation from Bröde et al. (2012),
+#' based on a multi-node model of human thermoregulation.
 #'
 #' @param temp_c Air temperature in Celsius (-50 to 50)
 #' @param wind_speed Wind speed at 10m height in m/s (0.5 to 17)
@@ -761,8 +760,7 @@ utci_category <- function(utci_val) {
 
 #' Calculate all heat stress indices
 #'
-#' Convenience function to calculate all heat stress indices at once from
-#' temperature and dewpoint (standard ERA5 output).
+#' Calculate all heat stress indices from temperature and dewpoint.
 #'
 #' @param temp_c Air temperature in celsius
 #' @param dewpoint_c Dewpoint temperature in celsius
@@ -860,8 +858,8 @@ heat_index_risk_category <- function(hi) {
 
 #' Download daily ERA5 climate data
 #'
-#' Flexible function to download ERA5 climate variables for a region.
-#' Supports temperature, humidity, wet bulb, wind, and solar radiation.
+#' Download ERA5 climate variables (temperature, humidity, wet bulb, wind,
+#' solar radiation) for a region.
 #'
 #' @param request_id Unique identifier for the data request
 #' @param start_date Start date in "YYYY-MM-DD" format
@@ -1124,9 +1122,8 @@ get_era5_daily_wind <- GetERA5DailyWind
 
 #' Download ERA5 data and calculate heat stress indices
 #'
-#' Downloads ERA5 temperature, dewpoint, and wind data for a region and calculates
-#' all heat stress indices (relative humidity, wet bulb temperature, heat index,
-#' WBGT, UTCI, and humidex).
+#' Download ERA5 temperature, dewpoint, and wind data for a region and calculate
+#' heat stress indices.
 #'
 #' @param request_id Unique identifier for the data request
 #' @param start_date Start date in "YYYY-MM-DD" format
@@ -1247,8 +1244,7 @@ get_era5_daily_heat_data <- GetERA5DailyHeatIndexData
 
 #' Get monthly ERA5 heat stress index data
 #'
-#' Wrapper for GetERA5DailyHeatIndexData that takes year and month parameters
-#' and returns monthly aggregated heat stress indices.
+#' Download ERA5 heat stress indices aggregated to a given month.
 #'
 #' @param request_id Unique identifier for the data request
 #' @param year Year (e.g., 2023)

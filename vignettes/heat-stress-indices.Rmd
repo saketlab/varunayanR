@@ -35,8 +35,7 @@ library(ggpubr)
 theme_set(theme_pubr(base_size = 11))
 ```
 
-Any study interested in assessing the impact of climate change on health outcomes would be interested in
-how excess heat affects human health. However, air temperature alone is not a sufficient metric to quantify heat stress, as humidity plays a crucial role in the body's ability to cool itself through sweating.
+Air temperature alone does not capture heat stress well. Humidity limits the body's cooling through sweating, so two days at the same temperature can differ greatly in physiological risk.
 
 In this vignette, we demonstrate how to calculate and compare different heat stress
 indices from ERA5 climate data. In particular, we compare the following indices:
@@ -52,9 +51,7 @@ indices from ERA5 climate data. In particular, we compare the following indices:
 
 ## Why multiple indices?
 
-Air temperature alone doesn't capture heat stress because humidity plays a
-critical role in the body's ability to cool through sweating. Each index
-captures different aspects of thermal stress:
+Each index weights temperature, humidity, wind, and radiation differently:
 
 | Index | Purpose | Key Factors | Primary Use |
 |-------|---------|-------------|-------------|
@@ -119,7 +116,7 @@ Risk categories based on ISO 7243:
 
 ### UTCI (Universal Thermal Climate Index)
 
-UTCI is the most comprehensive thermal comfort index, based on a multi-node model of human thermoregulation ([Bröde et al., 2012](https://doi.org/10.1007/s00484-011-0454-1)). We use the sparse regression approximation from [Roman et al. (2025)](https://doi.org/10.5281/zenodo.17465548):
+UTCI is based on a multi-node model of human thermoregulation ([Bröde et al., 2012](https://doi.org/10.1007/s00484-011-0454-1)). We use the sparse regression approximation from [Roman et al. (2025)](https://doi.org/10.5281/zenodo.17465548):
 
 The UTCI considers:
 - Air temperature
@@ -185,9 +182,8 @@ head(heat_solar)
 
 ## Solar load impact
 
-When `solar_load = TRUE`, the function downloads solar radiation data and uses it
-to calculate more accurate outdoor WBGT and UTCI values. This accounts for the
-additional heat stress from direct sunlight.
+When `solar_load = TRUE`, the function also downloads solar radiation data and
+uses it to calculate outdoor WBGT and UTCI values that account for direct sunlight.
 
 ```{r solar_comparison, fig.width=8, fig.height=5}
 daily_mean <- function(df, condition) {
