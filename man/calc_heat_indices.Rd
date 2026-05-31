@@ -4,21 +4,12 @@
 \alias{calc_heat_indices}
 \title{Calculate all heat stress indices}
 \usage{
-calc_heat_indices(
-  temp_c,
-  dewpoint_c,
-  solar_radiation = NULL,
-  wind_speed = NULL
-)
+calc_heat_indices(temp_c, dewpoint_c)
 }
 \arguments{
 \item{temp_c}{Air temperature in celsius}
 
 \item{dewpoint_c}{Dewpoint temperature in celsius}
-
-\item{solar_radiation}{Optional solar radiation in W/m2 for WBGT}
-
-\item{wind_speed}{Optional wind speed in m/s for WBGT}
 }
 \value{
 Data frame with columns: temp_c, dewpoint_c, rh, wet_bulb, heat_index,

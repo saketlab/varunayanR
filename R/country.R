@@ -8,7 +8,7 @@ utils::globalVariables(c("weight", "col_name"))
 #' averages by year and month.
 #'
 #' @param country One of: a country name string (resolved via
-#'   [maps::map()]), a path to a GeoJSON file, or an `sf` object.
+#'   \code{maps::map()}), a path to a GeoJSON file, or an `sf` object.
 #'   Common aliases like `"USA"` and `"UK"` are handled automatically.
 #' @param start_date Start date in `"YYYY-MM-DD"` format.
 #' @param end_date End date in `"YYYY-MM-DD"` format.

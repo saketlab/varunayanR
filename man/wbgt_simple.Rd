@@ -4,7 +4,7 @@
 \alias{wbgt_simple}
 \title{Calculate WBGT (Wet Bulb Globe Temperature)}
 \usage{
-wbgt_simple(temp_c, rh, wind_speed = 0.5, solar_radiation = NULL)
+wbgt_simple(temp_c, dewpoint_c)
 }
 \arguments{
 \item{temp_c}{Air temperature in Celsius}

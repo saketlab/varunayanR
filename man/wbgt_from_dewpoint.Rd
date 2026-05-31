@@ -4,29 +4,20 @@
 \alias{wbgt_from_dewpoint}
 \title{Calculate WBGT from dewpoint}
 \usage{
-wbgt_from_dewpoint(
-  temp_c,
-  dewpoint_c,
-  wind_speed = 0.5,
-  solar_radiation = NULL
-)
+wbgt_from_dewpoint(temp_c, dewpoint_c)
 }
 \arguments{
 \item{temp_c}{Air temperature in celsius}
 
 \item{dewpoint_c}{Dewpoint temperature in celsius}
-
-\item{wind_speed}{Wind speed in m/s (default: 0.5)}
-
-\item{solar_radiation}{Solar radiation in W/m2 (NULL for indoor/shaded)}
 }
 \value{
 WBGT in Celsius
 }
 \description{
-Calculate WBGT from dewpoint
+Alias for \code{wbgt_simple()} (BoM closed-form WBGT from temperature and
+dewpoint).
 }
 \examples{
 wbgt_from_dewpoint(35, 25)
-wbgt_from_dewpoint(35, 25, wind_speed = 3, solar_radiation = 800)
 }

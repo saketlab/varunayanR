@@ -22,7 +22,7 @@ get_era5_country_temperature(
 \item{...}{Additional arguments passed to \code{\link[=era5ify_geojson]{era5ify_geojson()}}.}
 
 \item{country}{One of: a country name string (resolved via
-\code{\link[maps:map]{maps::map()}}), a path to a GeoJSON file, or an \code{sf} object.
+\code{maps::map()}), a path to a GeoJSON file, or an \code{sf} object.
 Common aliases like \code{"USA"} and \code{"UK"} are handled automatically.}
 
 \item{start_date}{Start date in \code{"YYYY-MM-DD"} format.}

@@ -40,6 +40,7 @@ relative_humidity_from_dewpoint <- function(temp_c, dewpoint_c) {
 #' @examples
 #' wet_bulb_temperature(30, 60)
 wet_bulb_temperature <- function(temp_c, rh) {
+  # Clamp to Stull's stated validity window (RH 5-99%) to avoid extrapolation.
   rh <- pmin(pmax(rh, 5), 99)
   temp_c * atan(0.151977 * sqrt(rh + 8.313659)) +
     atan(temp_c + rh) -
@@ -140,33 +141,42 @@ heat_index_from_dewpoint <- function(temp_c, dewpoint_c) {
 #' @examples
 #' wbgt_simple(35, 70)
 #' wbgt_simple(35, 70, wind_speed = 2, solar_radiation = 800)
-wbgt_simple <- function(temp_c, rh, wind_speed = 0.5, solar_radiation = NULL) {
-  tw <- wet_bulb_temperature(temp_c, rh)
+wbgt_simple <- function(temp_c, dewpoint_c) {
+  # Australian Bureau of Meteorology closed-form WBGT approximation
+  # (Steadman-based): requires only air temperature and humidity, fully
+  # reproducible. e = vapor pressure in hPa.
+  e <- vapor_pressure_from_dewpoint(dewpoint_c)
+  0.567 * temp_c + 0.393 * e + 3.94
+}
 
-  if (!is.null(solar_radiation)) {
-    tg <- 0.009624 * solar_radiation + 1.102 * temp_c - 0.00404 * rh - 2.2776
-    tw_natural <- tw + 0.0048 * solar_radiation
-    0.7 * tw_natural + 0.2 * tg + 0.1 * temp_c
-  } else {
-    0.7 * tw + 0.3 * temp_c
-  }
+#' Calculate shade/indoor Wet Bulb Globe Temperature (ISO 7243)
+#'
+#' Uses the indoor formula 0.7*Tw + 0.3*Ta. For a closed-form estimate from
+#' temperature and humidity alone, use \code{wbgt_simple()}.
+#'
+#' @param temp_c Air temperature in Celsius
+#' @param wet_bulb_c Wet bulb temperature in Celsius
+#' @return WBGT in Celsius
+#' @export
+#' @examples
+#' wbgt_shade(35, 27)
+wbgt_shade <- function(temp_c, wet_bulb_c) {
+  0.7 * wet_bulb_c + 0.3 * temp_c
 }
 
 #' Calculate WBGT from dewpoint
 #'
+#' Alias for \code{wbgt_simple()} (BoM closed-form WBGT from temperature and
+#' dewpoint).
+#'
 #' @param temp_c Air temperature in celsius
 #' @param dewpoint_c Dewpoint temperature in celsius
-#' @param wind_speed Wind speed in m/s (default: 0.5)
-#' @param solar_radiation Solar radiation in W/m2 (NULL for indoor/shaded)
 #' @return WBGT in Celsius
 #' @export
 #' @examples
 #' wbgt_from_dewpoint(35, 25)
-#' wbgt_from_dewpoint(35, 25, wind_speed = 3, solar_radiation = 800)
-wbgt_from_dewpoint <- function(temp_c, dewpoint_c, wind_speed = 0.5,
-                               solar_radiation = NULL) {
-  rh <- relative_humidity_from_dewpoint(temp_c, dewpoint_c)
-  wbgt_simple(temp_c, rh, wind_speed, solar_radiation)
+wbgt_from_dewpoint <- function(temp_c, dewpoint_c) {
+  wbgt_simple(temp_c, dewpoint_c)
 }
 
 #' Calculate humidex (Canadian heat index)
@@ -212,8 +222,32 @@ mean_radiant_temperature <- function(temp_c, solar_radiation = NULL, wind_speed 
   if (is.null(solar_radiation)) {
     return(temp_c)
   }
-  ws <- if (is.null(wind_speed)) 0.5 else pmax(wind_speed, 0.1)
-  temp_c + 0.7 * (solar_radiation / 200) * (1.1 - 0.1 * sqrt(ws))
+  # Closed-form radiation-balance estimator for a standard person
+  # (Thorsson et al. 2007): absorb global horizontal shortwave onto the
+  # longwave radiant balance. Deterministic and non-iterative; wind_speed is
+  # unused (wind enters the convective terms of UTCI/WBGT, not the radiant load).
+  sigma <- 5.670374419e-8 # Stefan-Boltzmann, W m^-2 K^-4 (CODATA 2018)
+  eps_p <- 0.97 # longwave emissivity of a standard person
+  a_k <- 0.7 # shortwave absorption coefficient of a standard person
+  fa <- 0.25 # rotationally-averaged projected area factor
+  ta_k <- temp_c + 273.15
+  ((ta_k^4) + (a_k * fa * solar_radiation) / (eps_p * sigma))^0.25 - 273.15
+}
+
+# Saturation vapor pressure (kPa) using the UTCI reference es() routine
+# (Broede 2012 operational code). Shared by utci() for cross-language parity.
+.utci_saturation_kpa <- function(temp_c) {
+  g <- c(
+    -2836.5744, -6028.076559, 19.54263612, -0.02737830188,
+    0.000016261698, 7.0229056e-10, -1.8680009e-13
+  )
+  tk <- temp_c + 273.15
+  es <- 2.7150305 * log(tk)
+  for (i in seq_along(g)) {
+    es <- es + g[i] * tk^(i - 3)
+  }
+  # exp(es) is in Pa; the UTCI polynomial expects vapor pressure in kPa.
+  exp(es) * 0.001
 }
 
 #' Calculate UTCI (Universal Thermal Climate Index)
@@ -236,8 +270,12 @@ mean_radiant_temperature <- function(temp_c, solar_radiation = NULL, wind_speed 
 utci <- function(temp_c, wind_speed, dewpoint_c, tmrt = NULL) {
   Ta <- temp_c
   va <- pmax(pmin(wind_speed, 17), 0.5)
-  Pa <- vapor_pressure_from_dewpoint(dewpoint_c) / 10
-  D_Tmrt <- if (is.null(tmrt)) 0 else (tmrt - temp_c)
+  # Water-vapor pressure in kPa via the UTCI reference saturation routine,
+  # scaled by relative humidity. Matches the Python implementation exactly.
+  rh <- relative_humidity_from_dewpoint(temp_c, dewpoint_c)
+  Pa <- (rh / 100) * .utci_saturation_kpa(temp_c)
+  # Broede (2012) is defined for delta-MRT in [-30, 70] K.
+  D_Tmrt <- if (is.null(tmrt)) 0 else pmin(pmax(tmrt - temp_c, -30), 70)
 
   utci_val <- Ta +
     0.607562052 +
@@ -764,16 +802,13 @@ utci_category <- function(utci_val) {
 #'
 #' @param temp_c Air temperature in celsius
 #' @param dewpoint_c Dewpoint temperature in celsius
-#' @param solar_radiation Optional solar radiation in W/m2 for WBGT
-#' @param wind_speed Optional wind speed in m/s for WBGT
 #' @return Data frame with columns: temp_c, dewpoint_c, rh, wet_bulb, heat_index,
 #'   wbgt, humidex
 #' @export
 #' @examples
 #' calc_heat_indices(35, 25)
 #' calc_heat_indices(c(30, 35, 40), c(20, 25, 28))
-calc_heat_indices <- function(temp_c, dewpoint_c, solar_radiation = NULL,
-                              wind_speed = NULL) {
+calc_heat_indices <- function(temp_c, dewpoint_c) {
   rh <- relative_humidity_from_dewpoint(temp_c, dewpoint_c)
 
   data.frame(
@@ -782,7 +817,7 @@ calc_heat_indices <- function(temp_c, dewpoint_c, solar_radiation = NULL,
     rh = round(rh, 1),
     wet_bulb = round(wet_bulb_temperature(temp_c, rh), 2),
     heat_index = round(heat_index(temp_c, rh), 2),
-    wbgt = round(wbgt_simple(temp_c, rh, solar_radiation, wind_speed), 2),
+    wbgt = round(wbgt_simple(temp_c, dewpoint_c), 2),
     humidex = round(humidex(temp_c, dewpoint_c), 2)
   )
 }
@@ -797,7 +832,8 @@ calc_heat_indices <- function(temp_c, dewpoint_c, solar_radiation = NULL,
 #' @examples
 #' wbgt_risk_category(c(25, 28, 31, 34))
 wbgt_risk_category <- function(wbgt) {
-  breaks <- c(-Inf, 25, 28, 30, 33, Inf)
+  # NWS/OSHA WBGT flag-condition breaks, converted from 78/82/85/88 degF to degC.
+  breaks <- c(-Inf, 25.5556, 27.7778, 29.4444, 31.1111, Inf)
   labels <- c("Low", "Moderate", "High", "Very high", "Extreme")
   cut(wbgt, breaks = breaks, labels = labels, right = FALSE)
 }
@@ -812,7 +848,8 @@ wbgt_risk_category <- function(wbgt) {
 #' @examples
 #' heat_index_risk_category(c(27, 33, 40, 46, 55))
 heat_index_risk_category <- function(hi) {
-  breaks <- c(-Inf, 27, 32, 41, 54, Inf)
+  # NWS heat-index categories, converted from 80/90/103/124 degF to degC.
+  breaks <- c(-Inf, 26.6667, 32.2222, 39.4444, 51.1111, Inf)
   labels <- c("Normal", "Caution", "Extreme Caution", "Danger", "Extreme Danger")
   cut(hi, breaks = breaks, labels = labels, right = FALSE)
 }
@@ -1196,13 +1233,10 @@ GetERA5DailyHeatIndexData <- function(request_id, start_date, end_date,
         wet_bulb = wet_bulb_temperature(.data$temp_c, .data$rh),
         heat_index = heat_index(.data$temp_c, .data$rh),
         tmrt = mean_radiant_temperature(.data$temp_c, .data$solar_radiation_wm2, .data$wind_speed),
-        wbgt = wbgt_simple(.data$temp_c, .data$rh,
+        wbgt = wbgt_simple(.data$temp_c, .data$dewpoint_c),
+        utci = utci(.data$temp_c,
           wind_speed = .data$wind_speed,
-          solar_radiation = .data$solar_radiation_wm2
-        ),
-        utci = utci_sparse(.data$temp_c,
-          tmrt = .data$tmrt,
-          wind_speed = .data$wind_speed, rh = .data$rh
+          dewpoint_c = .data$dewpoint_c, tmrt = .data$tmrt
         ),
         humidex = humidex(.data$temp_c, .data$dewpoint_c),
         wbgt_risk = wbgt_risk_category(.data$wbgt),
@@ -1215,10 +1249,10 @@ GetERA5DailyHeatIndexData <- function(request_id, start_date, end_date,
       mutate(
         wet_bulb = wet_bulb_temperature(.data$temp_c, .data$rh),
         heat_index = heat_index(.data$temp_c, .data$rh),
-        wbgt = wbgt_simple(.data$temp_c, .data$rh, wind_speed = .data$wind_speed),
-        utci = utci_sparse(.data$temp_c,
-          tmrt = .data$temp_c,
-          wind_speed = .data$wind_speed, rh = .data$rh
+        wbgt = wbgt_simple(.data$temp_c, .data$dewpoint_c),
+        utci = utci(.data$temp_c,
+          wind_speed = .data$wind_speed,
+          dewpoint_c = .data$dewpoint_c, tmrt = NULL
         ),
         humidex = humidex(.data$temp_c, .data$dewpoint_c),
         wbgt_risk = wbgt_risk_category(.data$wbgt),

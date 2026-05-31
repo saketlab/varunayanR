@@ -1,7 +1,7 @@
 Package: varunayan
 Type: Package
 Title: Package for downloading and processing climatic variables from ERA5 and IMD
-Version: 0.1.1.9005
+Version: 0.1.1.9006
 Authors@R: c(person("Saket", "Choudhary", email = "saketc@iitb.ac.in", role = c("aut", "cre")))
 Author: Saket Choudhary [aut,cre]
 Maintainer: Saket Choudhary <saketc@iitb.ac.in>
