@@ -33,7 +33,7 @@ if (!file.exists(districts_file)) {
 districts_sf <- sf::st_read(districts_file, quiet = TRUE)
 ```
 
-## Download Data
+## Download data
 
 ```{r download_era5}
 era5_temp <- era5ify_geojson(
@@ -129,7 +129,7 @@ ggplot(temp_wide, aes(x = IMD, y = ERA5)) +
   theme_minimal()
 ```
 
-## Grid Coverage Check
+## Grid coverage check
 
 ```{r grid_coverage, fig.width=8, fig.height=6}
 imd_grid <- imd_tmax %>% distinct(longitude, latitude)
@@ -202,7 +202,7 @@ p1 + p2 + plot_layout(ncol = 2, guides = "collect") &
 
 ## Using BharatViz
 
-[BharatViz](https://bharatviz.saketlab.org) provides publication-ready choropleth maps of India.
+[BharatViz](https://bharatviz.saketlab.org) renders choropleth maps of India from district-level data.
 
 ```{r bharatviz_data}
 # Prepare district-level data for BharatViz API

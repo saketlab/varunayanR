@@ -1,10 +1,10 @@
 ---
-title: "HadEX3 Climate Extremes: India"
+title: "HadEX3 climate extremes: India"
 output:
   rmarkdown::html_vignette:
     self_contained: true
 vignette: >
-  %\VignetteIndexEntry{HadEX3 Climate Extremes: India}
+  %\VignetteIndexEntry{HadEX3 climate extremes: India}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -75,10 +75,10 @@ india_rx1day <- saved$Rx1day_annual
 india_txx_mon <- saved$TXx_monthly
 ```
 
-## Annual Temperature Extremes Trend
+## Annual temperature extremes trend
 
-Annual TXx (hottest day) for India: spatial mean across grid cells, with a
-10-year running mean trend.
+We take the spatial mean of annual TXx (the hottest day) across India's grid cells
+and add a loess trend.
 
 ```{r txx_trend, fig.height = 4}
 txx_annual <- india_txx |>
@@ -100,10 +100,10 @@ ggplot(txx_annual, aes(x = year, y = mean_txx)) +
   theme(panel.grid.minor = element_blank())
 ```
 
-## Seasonal Patterns from Monthly Data
+## Seasonal patterns from monthly data
 
-Monthly TXx averaged over 1981-2018 shows the typical pre-monsoon peak in
-May-June and the cooler post-monsoon period.
+Averaging monthly TXx over 1981-2018, we see the typical pre-monsoon peak in
+May-June and the cooler post-monsoon months.
 
 ```{r monthly_seasonal, fig.height = 4}
 seasonal <- india_txx_mon |>
@@ -122,7 +122,7 @@ ggplot(seasonal, aes(x = month_label, y = mean_txx, group = 1)) +
   theme(panel.grid.minor = element_blank())
 ```
 
-## Extreme Rainfall Trend (Rx1day)
+## Extreme rainfall trend (Rx1day)
 
 Annual maximum 1-day precipitation (Rx1day) over India 1951-2018.
 
@@ -146,9 +146,9 @@ ggplot(rx1_annual, aes(x = year, y = mean_rx1)) +
   theme(panel.grid.minor = element_blank())
 ```
 
-## Decadal Spatial Distribution of TXx
+## Decadal spatial distribution of TXx
 
-Comparing the spatial pattern of TXx across three decades.
+We compare the spatial pattern of TXx across three decades.
 
 ```{r spatial_decades, fig.width = 10, fig.height = 4}
 decades <- india_txx |>

@@ -33,15 +33,15 @@ library(patchwork)
 
 `get_era5_country_temperature()` resolves a country boundary, downloads
 monthly ERA5 data, and returns cosine-latitude area-weighted national
-averages. One call replaces the manual workflow of finding boundaries,
-writing GeoJSON, calling `era5ify_geojson()`, and aggregating grid cells.
+averages. We get all of that from one call, instead of finding boundaries,
+writing GeoJSON, calling `era5ify_geojson()`, and aggregating grid cells by hand.
 
-Monthly mean, max, and min temperatures for four European and four South Asian
-countries, 2024.
+Here we pull monthly mean, max, and min temperatures for four European and four South Asian
+countries in 2024.
 
 ## Download data
 
-The `variables` argument accepts shorthands `"mean"`, `"max"`, and `"min"`.
+We pass the `variables` shorthands `"mean"`, `"max"`, and `"min"`.
 
 ```{r download, eval = FALSE}
 countries <- c(
@@ -71,7 +71,7 @@ temps <- readRDS(system.file("extdata", "country_temps.rds", package = "varunaya
 head(temps)
 ```
 
-Tag each country with its region for faceting.
+We tag each country with its region for faceting.
 
 ```{r regions}
 region_map <- c(
@@ -165,7 +165,7 @@ ggplot(temps, aes(x = month, y = dtr, color = country)) +
 
 ## Regional comparison
 
-All eight countries on a single axis, with line type separating the two regions.
+Finally, we put all eight countries on a single axis, with line type separating the two regions.
 
 ```{r comparison, fig.height = 6}
 ggplot(temps, aes(

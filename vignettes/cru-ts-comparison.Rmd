@@ -1,10 +1,10 @@
 ---
-title: "CRU TS vs ERA5: India Temperature Comparison (2000-2018)"
+title: "CRU TS vs ERA5: India temperature comparison (2000-2018)"
 output:
   rmarkdown::html_vignette:
     self_contained: true
 vignette: >
-  %\VignetteIndexEntry{CRU TS vs ERA5: India Temperature Comparison (2000-2018)}
+  %\VignetteIndexEntry{CRU TS vs ERA5: India temperature comparison (2000-2018)}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -31,8 +31,7 @@ library(tidyr)
 library(patchwork)
 ```
 
-We can check how well [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=overview) and [CRU TS](https://crudata.uea.ac.uk/cru/data/hrg/) agree for monthly temperature over India. 
-These are two independent records covering 2000-2018:
+How well do [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=overview) and [CRU TS](https://crudata.uea.ac.uk/cru/data/hrg/) agree on monthly temperature over India? They are two independent records covering 2000-2018:
 
 - **ERA5** - ECMWF reanalysis at 0.25°, pulled with `era5ify_bbox`
 - **CRU TS v4.07** - station-interpolated observations from UEA at 0.5°, pulled with `cru_ts_bbox`

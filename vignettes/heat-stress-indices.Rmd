@@ -35,17 +35,16 @@ library(ggpubr)
 theme_set(theme_pubr(base_size = 11))
 ```
 
-Air temperature alone does not capture heat stress well. Humidity limits the body's cooling through sweating, so two days at the same temperature can differ greatly in physiological risk.
+Air temperature alone does not capture heat stress well. Humidity limits the body's cooling through sweating, so two days at the same temperature can differ in physiological risk.
 
-In this vignette, we demonstrate how to calculate and compare different heat stress
-indices from ERA5 climate data. In particular, we compare the following indices:
+Here we calculate six heat stress indices from ERA5 data and compare them:
 
-- **Air Temperature (T)**: Standard 2m temperature
-- **Wet Bulb Temperature (Tw)**: Temperature accounting for humidity (evaporative cooling)
-- **Heat Index (HI)**: Apparent temperature (how hot it "feels")
-- **WBGT**: Wet Bulb Globe Temperature (occupational heat stress standard)
-- **UTCI**: Universal Thermal Climate Index (comprehensive thermal comfort)
-- **Humidex**: Canadian heat discomfort index
+- Air temperature (T): standard 2m temperature
+- Wet bulb temperature (Tw): temperature accounting for humidity via evaporative cooling
+- Heat index (HI): apparent temperature, how hot it "feels"
+- WBGT: wet bulb globe temperature, the occupational heat stress standard
+- UTCI: universal thermal climate index
+- Humidex: Canadian heat discomfort index
 
 
 
@@ -62,9 +61,9 @@ Each index weights temperature, humidity, wind, and radiation differently:
 | UTCI | Comprehensive thermal comfort | T + Tmrt + Wind + Humidity | Climate research |
 | Humidex | Comfort assessment | T + Dewpoint | Canadian weather |
 
-## Understanding the indexes
+## Understanding the indices
 
-We will use the following nomenclature throughout this vignette:
+Nomenclature used throughout:
 
 | Symbol | Description | Unit |
 |--------|-------------|------|
@@ -146,7 +145,7 @@ Where $e = 6.11 \cdot \exp(5417.7530 \cdot (1/273.16 - 1/(273.15 + T_d)))$ is th
 
 # Calculating heat indices using ERA5 data
 
-We have defined a helper function `GetERA5DailyHeatIndexData()` which downloads temperature, dewpoint, and wind data
+The helper function `GetERA5DailyHeatIndexData()` downloads temperature, dewpoint, and wind data
 and calculates all heat stress indices in one call.
 
 ```{r download_geojson}
@@ -201,8 +200,7 @@ ggplot(solar_compare, aes(date, WBGT, color = Condition)) +
   labs(title = "Impact of solar radiation on WBGT", x = NULL, y = "WBGT (°C)")
 ```
 
-The difference between sun and shade conditions shows the additional thermal stress
-from solar radiation exposure, which can add several degrees to WBGT.
+Solar radiation adds several degrees to WBGT, which is the gap between the sun and shade lines.
 
 ## Temporal analysis
 
@@ -213,7 +211,7 @@ outdoor conditions.
 heat_data <- heat_solar
 ```
 
-We can visualize the daily mean values of each heat stress index over the month:
+Daily mean of each index over the month:
 
 ```{r daily_comparison, fig.width=10, fig.height=6}
 index_cols <- c(
@@ -249,15 +247,15 @@ ggplot(daily_diff, aes(date, diff, fill = Index)) +
   labs(title = "Deviation from air temperature", x = NULL, y = "Difference (°C)")
 ```
 
-We make the following observations:
+A few things stand out:
 
-- **Wet Bulb** is always cooler than air temperature (due to evaporative cooling)
-- **Heat Index** and **Humidex** are warmer when humidity is high
-- **WBGT** and **UTCI** show elevated values due to solar radiation
+- Wet bulb stays below air temperature because of evaporative cooling.
+- Heat index and humidex rise above it when humidity is high.
+- WBGT and UTCI run high here because of the solar load.
 
 ## Spatial analysis
 
-We can also visualize the spatial distribution of heat stress indices across India.
+The same indices, mapped across India by district.
 
 
 ```{r download_districts}
@@ -348,7 +346,7 @@ risk_map("wbgt_risk", risk_colors, "WBGT risk") |
 
 # Relationship between indices
 
-We can also explore how the different heat stress indices relate to each other.
+How the indices track each other, plotted against air temperature and as a correlation matrix.
 
 ```{r scatter_indices, fig.width=12, fig.height=8}
 sample_data <- heat_data %>% sample_n(min(5000, n()))

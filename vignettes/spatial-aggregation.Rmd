@@ -24,11 +24,11 @@ library(sf)
 library(patchwork)
 ```
 
-## The Problem
+## The problem
 
-Climate datasets like ERA5 and IMD provide data on regular grids (e.g., 0.25° × 0.25°).
-When aggregating to administrative boundaries like districts, smaller regions may not
-contain any grid points, resulting in missing data.
+ERA5 and IMD give us data on regular grids (for example 0.25° × 0.25°).
+When we aggregate to administrative boundaries like districts, the smaller districts may
+contain no grid points at all, which leaves them with missing data.
 
 ```{r download_data}
 districts_url <- "https://bharatviz.saketlab.org/India_LGD_districts.geojson"
@@ -66,7 +66,7 @@ era5_spatial <- era5_temp %>%
 
 ## Visualizing grid coverage
 
-The `compare_grids()` function shows how grid points align with polygon boundaries.
+We use `compare_grids()` to see how the grid points align with polygon boundaries.
 
 ```{r viz_imd, fig.width=10, fig.height=7}
 compare_grids(
@@ -126,9 +126,9 @@ cat("  Coverage:", era5_coverage$coverage_percent, "%\n")
 
 ## Aggregation methods
 
-### Point-in-Polygon
+### Point-in-polygon
 
-The traditional approach uses spatial joins to find grid points within each polygon:
+We use a spatial join to find the grid points that fall within each polygon:
 
 ```{r pip}
 result_pip <- aggregate_to_polygons(
@@ -142,7 +142,7 @@ cat("Districts with data:", sum(!is.na(result_pip$value)), "/", nrow(result_pip)
 
 ### Nearest centroid
 
-This method finds the nearest grid point to each polygon's centroid:
+Here we assign each polygon the grid point nearest its centroid:
 ```{r nearest}
 result_nearest <- aggregate_to_polygons(
   imd_spatial, districts_sf, "temp",

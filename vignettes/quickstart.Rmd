@@ -1,10 +1,10 @@
 ---
-title: "Quickstart Guide"
+title: "Quickstart guide"
 output:
   rmarkdown::html_vignette:
     self_contained: true
 vignette: >
-  %\VignetteIndexEntry{Quickstart Guide}
+  %\VignetteIndexEntry{Quickstart guide}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 library(varunayan)
 ```
 
-## ERA5 Data
+## ERA5 data
 
 ERA5 provides global climate reanalysis data. Requires [CDS API credentials](https://cds.climate.copernicus.eu/how-to-api).
 
@@ -29,7 +29,7 @@ ERA5 provides global climate reanalysis data. Requires [CDS API credentials](htt
 setup_cds_credentials(key = "your-personal-access-token")
 ```
 
-### Bounding Box
+### Bounding box
 
 ```{r era5-bbox, eval=FALSE}
 df <- era5ify_bbox(
@@ -42,7 +42,7 @@ df <- era5ify_bbox(
 )
 ```
 
-### GeoJSON Region
+### GeoJSON region
 
 ```{r era5-geojson, eval=FALSE}
 df <- era5ify_geojson(
@@ -55,7 +55,7 @@ df <- era5ify_geojson(
 )
 ```
 
-### Point Location
+### Point location
 
 ```{r era5-point, eval=FALSE}
 df <- era5ify_point(
@@ -68,7 +68,7 @@ df <- era5ify_point(
 )
 ```
 
-## IMD Data
+## IMD data
 
 IMD provides high-resolution gridded data for India. No credentials required.
 
@@ -99,7 +99,7 @@ df <- imd_temperature_bbox(
 )
 ```
 
-### GeoJSON Region
+### GeoJSON region
 
 ```{r imd-geojson, eval=FALSE}
 df <- imd_rainfall_geojson(
@@ -111,7 +111,7 @@ df <- imd_rainfall_geojson(
 )
 ```
 
-## Variable Discovery
+## Variable discovery
 
 ```{r variables, message=FALSE}
 # Search variables
@@ -124,7 +124,7 @@ describe_variables(c("2m_temperature", "total_precipitation"))
 head(list_available_variables("single"), 10)
 ```
 
-## Cache Management
+## Cache management
 
 ```{r cache, message=FALSE}
 # View cache
