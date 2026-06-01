@@ -50,9 +50,10 @@ compute_optimal_chunk_size <- function(n_variables, frequency,
   n_vars <- as.integer(n_variables) * as.integer(n_pressure_levels)
 
   if (frequency == "monthly") {
-    # CDS monthly-means product is structured per-year internally.
-    # Multi-year requests time out regardless of field count.
-    return(1L)
+    # CDS monthly-means: field = n_vars * 12_months_per_year * n_years
+    # Limit is 10,000 fields. Use 90% headroom.
+    max_years <- (CDS_FIELD_LIMIT_MONTHLY * 0.9) %/% (n_vars * 12L)
+    return(as.integer(max(min(max_years, 30L), 1L)))
   }
 
   times_per_day <- if (frequency == "hourly") 24L else 1L

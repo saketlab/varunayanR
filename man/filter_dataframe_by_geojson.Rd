@@ -2,7 +2,7 @@
 % Please edit documentation in R/processing.R
 \name{filter_dataframe_by_geojson}
 \alias{filter_dataframe_by_geojson}
-\title{Filter data.frame by GeoJSON polygon (optimized)}
+\title{Filter data.frame by GeoJSON polygon}
 \usage{
 filter_dataframe_by_geojson(df, geojson_file)
 }
@@ -15,5 +15,6 @@ filter_dataframe_by_geojson(df, geojson_file)
 data.frame with spatially filtered data
 }
 \description{
-Uses geometry simplification and spatial pre-aggregation for large datasets.
+Tests only unique (lat, lon) coordinates against the polygon, then joins
+back to full dataset via data.table keyed semi-join.
 }
