@@ -9,23 +9,19 @@ wbgt_simple(temp_c, dewpoint_c)
 \arguments{
 \item{temp_c}{Air temperature in Celsius}
 
-\item{rh}{Relative humidity as percentage (0-100)}
-
-\item{wind_speed}{Wind speed in m/s (default: 0.5 for still air)}
-
-\item{solar_radiation}{Solar radiation in W/m2 (NULL for indoor/shaded)}
+\item{dewpoint_c}{Dewpoint temperature in Celsius}
 }
 \value{
 WBGT in Celsius
 }
 \description{
-Calculates WBGT for occupational heat stress assessment. Uses the standard
-formula: WBGT = 0.7\emph{Tnwb + 0.2}Tg + 0.1\emph{Ta (outdoor) or
-WBGT = 0.7}Tnwb + 0.3*Tg (indoor/shaded).
+Calculates the Australian Bureau of Meteorology closed-form WBGT
+approximation (Steadman-based) from air temperature and dewpoint. Suitable
+for occupational heat stress assessment when only temperature and humidity
+are available.
 }
 \examples{
-wbgt_simple(35, 70)
-wbgt_simple(35, 70, wind_speed = 2, solar_radiation = 800)
+wbgt_simple(35, 25)
 }
 \references{
 Liljegren, J.C., et al. (2008). Modeling the Wet Bulb Globe Temperature

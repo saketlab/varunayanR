@@ -64,11 +64,16 @@ cru_tmp <- cru_ts_bbox(
 ```
 
 ```{r load_data}
-saved <- readRDS(system.file("extdata", "india_era5_cru_comparison.rds",
+data_path <- system.file("extdata", "india_era5_cru_comparison.rds",
   package = "varunayan"
-))
-era5_tmp <- saved$era5_tmp
-cru_tmp <- saved$cru_tmp
+)
+if (!nzchar(data_path)) {
+  knitr::opts_chunk$set(eval = FALSE)
+} else {
+  saved <- readRDS(data_path)
+  era5_tmp <- saved$era5_tmp
+  cru_tmp <- saved$cru_tmp
+}
 ```
 
 ## Monthly time series
