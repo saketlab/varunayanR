@@ -69,10 +69,15 @@ india_txx_mon <- hadex3_bbox(
 ```
 
 ```{r load_data}
-saved <- readRDS(system.file("extdata", "india_hadex3.rds", package = "varunayan"))
-india_txx <- saved$TXx_annual
-india_rx1day <- saved$Rx1day_annual
-india_txx_mon <- saved$TXx_monthly
+data_path <- system.file("extdata", "india_hadex3.rds", package = "varunayan")
+if (!nzchar(data_path)) {
+  knitr::opts_chunk$set(eval = FALSE)
+} else {
+  saved <- readRDS(data_path)
+  india_txx <- saved$TXx_annual
+  india_rx1day <- saved$Rx1day_annual
+  india_txx_mon <- saved$TXx_monthly
+}
 ```
 
 ## Annual temperature extremes trend
