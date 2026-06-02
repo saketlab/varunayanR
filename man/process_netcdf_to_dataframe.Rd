@@ -13,5 +13,5 @@ process_netcdf_to_dataframe(netcdf_file)
 data.frame with processed climate data
 }
 \description{
-Process NetCDF file and extract data as data.frame
+Uses ncdf4 directly for fast reading, with stars as fallback.
 }

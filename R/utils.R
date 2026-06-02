@@ -9,7 +9,7 @@ NULL
 # Suppress R CMD check NOTEs for dplyr NSE variables
 utils::globalVariables(c(
   ".", "..value_col", "datetime", "latitude", "longitude",
-  "time_group", "value", "variable"
+  "time_group", "time_idx", "value", "variable"
 ))
 
 # Package environment for timing data

@@ -153,10 +153,17 @@ states_url <- "https://bharatviz.saketlab.org/India_LGD_states.geojson"
 states_file <- "indian_states.geojson"
 
 if (!file.exists(states_file)) {
-  download.file(states_url, states_file, mode = "wb")
+  try(download.file(states_url, states_file, mode = "wb"), silent = TRUE)
 }
 
-states_sf <- sf::st_read(states_file, quiet = TRUE)
+states_sf <- tryCatch(
+  sf::st_read(states_file, quiet = TRUE),
+  error = function(e) NULL
+)
+
+if (is.null(states_sf)) {
+  knitr::opts_chunk$set(eval = FALSE)
+}
 ```
 
 ```{r download_era5}

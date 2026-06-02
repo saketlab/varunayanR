@@ -142,7 +142,6 @@ download_imd_rainfall <- function(start_year, end_year, resolution = 0.25, outpu
           )
         }
 
-        Sys.sleep(2)
         result
       },
       error = function(e) {
@@ -300,7 +299,6 @@ download_imd_temperature <- function(start_year, end_year, var_type = "tmax", ou
           )
         }
 
-        Sys.sleep(2)
         result
       },
       error = function(e) {

@@ -122,25 +122,23 @@ heat_index_from_dewpoint <- function(temp_c, dewpoint_c) {
 
 #' Calculate WBGT (Wet Bulb Globe Temperature)
 #'
-#' Calculates WBGT for occupational heat stress assessment. Uses the standard
-#' formula: WBGT = 0.7*Tnwb + 0.2*Tg + 0.1*Ta (outdoor) or
-#' WBGT = 0.7*Tnwb + 0.3*Tg (indoor/shaded).
+#' Calculates the Australian Bureau of Meteorology closed-form WBGT
+#' approximation (Steadman-based) from air temperature and dewpoint. Suitable
+#' for occupational heat stress assessment when only temperature and humidity
+#' are available.
 #'
 #' @param temp_c Air temperature in Celsius
-#' @param rh Relative humidity as percentage (0-100)
-#' @param wind_speed Wind speed in m/s (default: 0.5 for still air)
-#' @param solar_radiation Solar radiation in W/m2 (NULL for indoor/shaded)
+#' @param dewpoint_c Dewpoint temperature in Celsius
 #' @return WBGT in Celsius
 #' @references
 #'   Liljegren, J.C., et al. (2008). Modeling the Wet Bulb Globe Temperature
 #'   Using Standard Meteorological Measurements. J. Occup. Environ. Hyg., 5(10), 645-655.
 #'   Methods for Estimating Wet Bulb Globe Temperature
-# From Remote and Low‐Cost Data: A Comparative Study in Central Alabama Anabel W. Carter, Benjamin F. Zaitchik , Julia M. Gohlke, Suwei Wang , and
+# From Remote and Low-Cost Data: A Comparative Study in Central Alabama Anabel W. Carter, Benjamin F. Zaitchik , Julia M. Gohlke, Suwei Wang , and
 # Molly B. Richardson  https://vtechworks.lib.vt.edu/server/api/core/bitstreams/b482c33c-ca60-4ece-a99f-f2b36cef3eeb/content
 #' @export
 #' @examples
-#' wbgt_simple(35, 70)
-#' wbgt_simple(35, 70, wind_speed = 2, solar_radiation = 800)
+#' wbgt_simple(35, 25)
 wbgt_simple <- function(temp_c, dewpoint_c) {
   # Australian Bureau of Meteorology closed-form WBGT approximation
   # (Steadman-based): requires only air temperature and humidity, fully

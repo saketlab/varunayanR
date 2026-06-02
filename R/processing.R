@@ -1,5 +1,7 @@
 #' Process NetCDF file and extract data as data.frame
 #'
+#' Uses ncdf4 directly for fast reading, with stars as fallback.
+#'
 #' @param netcdf_file Character string path to NetCDF file
 #' @return data.frame with processed climate data
 process_netcdf_to_dataframe <- function(netcdf_file) {
@@ -10,6 +12,160 @@ process_netcdf_to_dataframe <- function(netcdf_file) {
   start_time_total <- Sys.time()
 
   start_time <- Sys.time()
+  df <- tryCatch(
+    .read_ncdf4_fast(netcdf_file),
+    error = function(e) {
+      message(sprintf(fmt = "Fast ncdf4 read failed (%s), falling back to stars", e$message))
+      .read_ncdf_stars_fallback(netcdf_file)
+    }
+  )
+  elapsed <- as.numeric(x = difftime(Sys.time(), start_time, units = "secs"))
+  message(sprintf(fmt = "[TIMER] NetCDF read: %ss", round(elapsed, 2)))
+
+  df <- df[complete.cases(... = df), ]
+
+  total_elapsed <- as.numeric(x = difftime(Sys.time(), start_time_total, units = "secs"))
+  message(sprintf(fmt = "NetCDF processing completed. %s data points extracted.", nrow(x = df)))
+  message(sprintf(fmt = "[TIMER] Total NetCDF processing: %ss", round(total_elapsed, 2)))
+
+  df
+}
+
+#' Fast NetCDF reader using ncdf4 + data.table
+#' @param netcdf_file Path to NetCDF file
+#' @return data.frame in long format (datetime, latitude, longitude, variable, value)
+#' @keywords internal
+.read_ncdf4_fast <- function(netcdf_file) {
+  nc <- ncdf4::nc_open(netcdf_file)
+  on.exit(ncdf4::nc_close(nc))
+
+  dim_names <- names(nc$dim)
+  lat_name <- intersect(c("latitude", "lat"), dim_names)[1]
+  lon_name <- intersect(c("longitude", "lon"), dim_names)[1]
+  time_name <- intersect(c("valid_time", "time"), dim_names)[1]
+
+  if (is.na(lat_name) || is.na(lon_name)) {
+    stop("No latitude/longitude dimensions found")
+  }
+
+  lats <- ncdf4::ncvar_get(nc, lat_name)
+  lons <- ncdf4::ncvar_get(nc, lon_name)
+
+  times <- NULL
+  time_units <- NULL
+  if (!is.na(time_name)) {
+    times <- ncdf4::ncvar_get(nc, time_name)
+    time_units <- nc$dim[[time_name]]$units
+  }
+
+  data_vars <- setdiff(names(nc$var), c(.NC_METADATA_VARS, lat_name, lon_name, time_name))
+  if (length(data_vars) == 0) stop("No data variables found in NetCDF")
+
+  # expand.grid (not CJ) to match ncvar_get's column-major dimension order
+  if (!is.null(times)) {
+    grid_dt <- data.table::as.data.table(expand.grid(
+      longitude = lons,
+      latitude = lats,
+      time_idx = seq_along(times)
+    ))
+    grid_dt[, datetime := times[time_idx]]
+    grid_dt[, time_idx := NULL]
+  } else {
+    grid_dt <- data.table::as.data.table(expand.grid(
+      longitude = lons, latitude = lats
+    ))
+    grid_dt[, datetime := as.POSIXct("2023-01-01 12:00:00", tz = "UTC")]
+  }
+
+  for (var in data_vars) {
+    var_data <- ncdf4::ncvar_get(nc, var)
+    data.table::set(grid_dt, j = var, value = as.vector(var_data))
+  }
+
+  if (!is.null(times) && is.numeric(grid_dt$datetime)) {
+    grid_dt[, datetime := .parse_nc_time(datetime, time_units)]
+  }
+
+  id_cols <- c("datetime", "latitude", "longitude")
+  df <- data.table::melt(
+    grid_dt,
+    id.vars = id_cols,
+    measure.vars = data_vars,
+    variable.name = "variable",
+    value.name = "value",
+    variable.factor = FALSE
+  )
+
+  base_cols <- c("datetime", "latitude", "longitude", "variable", "value")
+  other_cols <- setdiff(names(df), base_cols)
+  data.table::setcolorder(df, c(base_cols, other_cols))
+
+  as.data.frame(df)
+}
+
+#' Parse numeric time values from NetCDF
+#' @param time_vals Numeric time values
+#' @param time_units Character string from the NetCDF time dimension units attribute
+#'   (e.g. "seconds since 1970-01-01", "hours since 1900-01-01")
+#' @return POSIXct vector
+#' @keywords internal
+.parse_nc_time <- function(time_vals, time_units = NULL) {
+  if (!is.null(time_units) && grepl("since", time_units, ignore.case = TRUE)) {
+    parts <- strsplit(time_units, "\\s+since\\s+", perl = TRUE)[[1]]
+    if (length(parts) == 2) {
+      unit_str <- tolower(trimws(parts[1]))
+      origin_date <- sub("\\s.*", "", trimws(parts[2]))
+
+      mult <- switch(unit_str,
+        "seconds" = 1,
+        "minutes" = 60,
+        "hours"   = 3600,
+        "days"    = 86400,
+        NULL
+      )
+
+      if (!is.null(mult)) {
+        result <- tryCatch(
+          as.POSIXct(time_vals * mult, origin = origin_date, tz = "UTC"),
+          error = function(e) NULL
+        )
+        if (!is.null(result) && all(is.finite(result))) {
+          return(result)
+        }
+      }
+    }
+  }
+
+  for (spec in list(
+    list(mult = 1, origin = "1970-01-01"),
+    list(mult = 3600, origin = "1900-01-01"),
+    list(mult = 3600, origin = "1979-01-01"),
+    list(mult = 86400, origin = "1900-01-01")
+  )) {
+    result <- tryCatch(
+      as.POSIXct(time_vals * spec$mult, origin = spec$origin, tz = "UTC"),
+      error = function(e) NULL
+    )
+    if (!is.null(result) && all(is.finite(result)) &&
+      all(result > as.POSIXct("1800-01-01", tz = "UTC")) &&
+      all(result < as.POSIXct("2100-01-01", tz = "UTC"))) {
+      return(result)
+    }
+  }
+
+  warning("Using sequential dates fallback", call. = FALSE)
+  n_times <- length(unique(time_vals))
+  seq(as.POSIXct("2023-01-01", tz = "UTC"),
+    by = "day",
+    length.out = n_times
+  )[as.numeric(as.factor(time_vals))]
+}
+
+#' Stars-based NetCDF reader (fallback for non-standard files)
+#' @param netcdf_file Path to NetCDF file
+#' @return data.frame in long format
+#' @keywords internal
+.read_ncdf_stars_fallback <- function(netcdf_file) {
   nc_vars <- tryCatch(
     {
       nc_tmp <- ncdf4::nc_open(netcdf_file)
@@ -28,25 +184,19 @@ process_netcdf_to_dataframe <- function(netcdf_file) {
       read_ncdf(netcdf_file)
     },
     error = function(e) {
-      # Handle time conversion failures with fallback chain
       if (grepl(pattern = "cannot convert.*into seconds", e$message)) {
         tryCatch(
           read_ncdf(netcdf_file, proxy = FALSE, make_time = FALSE),
-          error = function(e2) read_netcdf_with_ncdf4(netcdf_file)
+          error = function(e2) .read_ncdf4_fast(netcdf_file)
         )
       } else {
         stop(e)
       }
     }
   )
-  elapsed <- as.numeric(x = difftime(Sys.time(), start_time, units = "secs"))
-  message(sprintf(fmt = "[TIMER] NetCDF read: %ss", round(elapsed, 2)))
 
-  start_time <- Sys.time()
   df <- as.data.frame(nc_data)
   names(df) <- gsub(pattern = "\\.", replacement = "_", names(df))
-  elapsed <- as.numeric(x = difftime(Sys.time(), start_time, units = "secs"))
-  message(sprintf(fmt = "[TIMER] Convert to data.frame: %ss", round(elapsed, 2)))
 
   name_map <- c(
     x = "longitude", y = "latitude", time = "datetime",
@@ -64,62 +214,31 @@ process_netcdf_to_dataframe <- function(netcdf_file) {
   }
 
   if ("datetime" %in% names(df) && is.numeric(df$datetime)) {
-    # Try common ERA5 time origins (hours since epoch)
-    for (spec in list(
-      list(mult = 3600, origin = "1900-01-01"),
-      list(mult = 3600, origin = "1979-01-01"),
-      list(mult = 86400, origin = "1900-01-01")
-    )) {
-      result <- tryCatch(as.POSIXct(x = df$datetime * spec$mult, origin = spec$origin, tz = "UTC"),
-        error = function(e) NULL
-      )
-      if (!is.null(result)) {
-        df$datetime <- result
-        break
-      }
-    }
-
-    if (is.numeric(df$datetime)) {
-      warning("Using sequential dates fallback", call. = FALSE)
-      n_times <- length(x = unique(x = df$datetime))
-      df$datetime <- seq(as.POSIXct(x = "2023-01-01", tz = "UTC"),
-        by = "day",
-        length.out = n_times
-      )[as.numeric(x = as.factor(x = df$datetime))]
-    }
+    df$datetime <- .parse_nc_time(df$datetime)
   }
 
   var_cols <- setdiff(x = names(x = df), y = c("longitude", "latitude", "datetime"))
 
   if (length(x = var_cols) > 1) {
-    start_time <- Sys.time()
-    df_list <- list()
-    for (i in seq_along(along.with = var_cols)) {
-      var_col <- var_cols[i]
-      temp_df <- df[, setdiff(x = names(x = df), y = var_cols), drop = FALSE]
-      temp_df$variable <- var_col
-      temp_df$value <- df[[var_col]]
-      df_list[[i]] <- temp_df
-    }
-    df <- do.call(rbind, df_list)
-    elapsed <- as.numeric(x = difftime(Sys.time(), start_time, units = "secs"))
-    message(sprintf(fmt = "[TIMER] Reshape to long format: %ss", round(elapsed, 2)))
+    DT <- data.table::as.data.table(df)
+    df <- as.data.frame(data.table::melt(
+      DT,
+      id.vars = c("datetime", "latitude", "longitude"),
+      measure.vars = var_cols,
+      variable.name = "variable",
+      value.name = "value",
+      variable.factor = FALSE
+    ))
   } else if (length(x = var_cols) == 1) {
     df$variable <- var_cols[1]
     names(df)[names(df) == var_cols[1]] <- "value"
   }
 
-  if (all(c("datetime", "latitude", "longitude", "variable", "value") %in% names(df))) {
-    base_cols <- c("datetime", "latitude", "longitude", "variable", "value")
-    other_cols <- setdiff(x = names(x = df), y = base_cols)
+  base_cols <- c("datetime", "latitude", "longitude", "variable", "value")
+  if (all(base_cols %in% names(df))) {
+    other_cols <- setdiff(names(df), base_cols)
     df <- df[, c(base_cols, other_cols), drop = FALSE]
   }
-
-  df <- df[complete.cases(... = df), ]
-
-  total_elapsed <- as.numeric(x = difftime(Sys.time(), start_time_total, units = "secs"))
-  message(sprintf(fmt = "NetCDF processing completed. %s data points extracted.", nrow(x = df)))
-  message(sprintf(fmt = "[TIMER] Total NetCDF processing: %ss", round(total_elapsed, 2)))
 
   df
 }
@@ -155,22 +274,23 @@ filter_netcdf_by_geojson <- function(netcdf_file, geojson_file) {
   filter_dataframe_by_geojson(df, geojson_file)
 }
 
-#' Filter data.frame by GeoJSON polygon (optimized)
+#' Filter data.frame by GeoJSON polygon
 #'
-#' Uses geometry simplification and spatial pre-aggregation for large datasets.
+#' Tests only unique (lat, lon) coordinates against the polygon, then joins
+#' back to full dataset via data.table keyed semi-join.
 #'
 #' @param df data.frame with latitude and longitude columns
 #' @param geojson_file Character string path to GeoJSON file
 #' @return data.frame with spatially filtered data
 filter_dataframe_by_geojson <- function(df, geojson_file) {
   start_time <- Sys.time()
-  message(sprintf(fmt = "Starting optimized spatial filtering (%s points)...", nrow(x = df)))
+  n_before <- nrow(x = df)
+  message(sprintf(fmt = "Starting spatial filtering (%s points)...", n_before))
 
   if (!grepl(pattern = "^https?://", geojson_file) && !file.exists(geojson_file)) {
     stop("GeoJSON file not found: ", geojson_file)
   }
 
-  message("Loading GeoJSON boundary...")
   step_start <- Sys.time()
   geojson_sf <- st_read(geojson_file, quiet = TRUE)
   elapsed <- as.numeric(x = difftime(Sys.time(), step_start, units = "secs"))
@@ -182,23 +302,19 @@ filter_dataframe_by_geojson <- function(df, geojson_file) {
   }
   geojson_sf <- st_transform(geojson_sf, 4326)
 
-  # Disable s2 spherical geometry for union operation
   old_use_s2 <- sf_use_s2()
   sf_use_s2(FALSE)
   on.exit(sf_use_s2(old_use_s2))
 
-  message("Preparing boundary polygon...")
   geojson_sf <- st_make_valid(geojson_sf)
 
   geom_types <- unique(x = as.character(x = st_geometry_type(geojson_sf)))
   if ("GEOMETRYCOLLECTION" %in% geom_types) {
-    message("Converting GEOMETRYCOLLECTION to polygons...")
     geojson_sf <- st_collection_extract(geojson_sf, "POLYGON")
   }
 
   geojson_union <- st_union(geojson_sf)
 
-  # Simplify complex geometries for faster intersection tests
   n_coords <- tryCatch(
     {
       coords <- st_coordinates(geojson_union)
@@ -208,9 +324,8 @@ filter_dataframe_by_geojson <- function(df, geojson_file) {
   )
 
   if (n_coords > 10000) {
-    message(sprintf(fmt = "Simplifying complex geometry (%s vertices) for faster processing...", n_coords))
+    message(sprintf(fmt = "Simplifying complex geometry (%s vertices)...", n_coords))
     geojson_union <- st_simplify(geojson_union, preserveTopology = TRUE, dTolerance = 0.01)
-
     n_coords_after <- tryCatch(
       {
         coords <- st_coordinates(geojson_union)
@@ -218,7 +333,6 @@ filter_dataframe_by_geojson <- function(df, geojson_file) {
       },
       error = function(e) n_coords
     )
-
     message(sprintf(fmt = "Simplified to %s vertices (%s%% of original)", n_coords_after, round(100 * n_coords_after / n_coords, 1)))
   }
 
@@ -227,8 +341,6 @@ filter_dataframe_by_geojson <- function(df, geojson_file) {
 
   step_start <- Sys.time()
   bbox <- st_bbox(geojson_union)
-  message("Pre-filtering by bounding box...")
-  n_before <- nrow(x = df)
   df <- df[df$latitude >= bbox["ymin"] & df$latitude <= bbox["ymax"] &
     df$longitude >= bbox["xmin"] & df$longitude <= bbox["xmax"], ]
   elapsed <- as.numeric(x = difftime(Sys.time(), step_start, units = "secs"))
@@ -240,106 +352,28 @@ filter_dataframe_by_geojson <- function(df, geojson_file) {
     return(df)
   }
 
-  # Pre-aggregate spatially for very large datasets
-  spatial_aggregated <- FALSE
-  if (nrow(x = df) > 500000) {
-    message(sprintf(fmt = "Dataset very large (%s points). Pre-aggregating by unique spatial locations...", nrow(x = df)))
-    step_start <- Sys.time()
+  step_start <- Sys.time()
+  unique_coords <- unique(df[, c("latitude", "longitude")])
+  n_unique <- nrow(unique_coords)
+  message(sprintf(fmt = "Testing %s unique coordinates (from %s rows)...", n_unique, nrow(x = df)))
 
-    df_original <- df
-    df <- df %>%
-      group_by(latitude, longitude) %>%
-      summarise(
-        n_points = n(),
-        value = mean(value, na.rm = TRUE),
-        .groups = "drop"
-      )
+  points_sf <- st_as_sf(unique_coords, coords = c("longitude", "latitude"), crs = 4326)
 
-    spatial_aggregated <- TRUE
-    elapsed <- as.numeric(x = difftime(Sys.time(), step_start, units = "secs"))
-    message(sprintf(fmt = "Pre-aggregated to %s unique spatial locations (%s%% of original) in %ss", nrow(x = df), round(100 * nrow(x = df) / nrow(x = df_original), 1), round(elapsed, 2)))
-  }
+  inside <- st_intersects(points_sf, geojson_union, sparse = TRUE)
+  inside_mask <- lengths(inside) > 0
+  intersect_elapsed <- as.numeric(x = difftime(Sys.time(), step_start, units = "secs"))
+  message(sprintf(fmt = "[TIMER] Spatial test (%s unique pts): %ss (%s inside)", n_unique, round(intersect_elapsed, 3), sum(inside_mask)))
 
-  message("Converting to spatial points for polygon intersection...")
+  inside_coords <- unique_coords[inside_mask, ]
 
-  if (nrow(x = df) > 50000) {
-    batch_size <- 25000
-    n_batches <- ceiling(nrow(x = df) / batch_size)
-    message(sprintf(fmt = "Processing %s batches of %s points each...", n_batches, batch_size))
-
-    filtered_list <- list()
-    batch_times <- numeric(n_batches)
-
-    for (i in seq_len(length.out = n_batches)) {
-      start_idx <- (i - 1) * batch_size + 1
-      end_idx <- min(i * batch_size, nrow(x = df))
-
-      eta_msg <- ""
-      if (i > 1) {
-        avg_time <- mean(batch_times[1:(i - 1)])
-        remaining_batches <- n_batches - i + 1
-        eta_seconds <- avg_time * remaining_batches
-        if (eta_seconds < 60) {
-          eta_msg <- sprintf(fmt = " [ETA: ~%.0f sec]", eta_seconds)
-        } else {
-          eta_msg <- sprintf(fmt = " [ETA: ~%.1f min]", eta_seconds / 60)
-        }
-      }
-
-      message(sprintf(fmt = "Batch %s/%s (%s%%): filtering points %s to %s...%s", i, n_batches, round(100 * i / n_batches, 1), start_idx, end_idx, eta_msg))
-      batch_start <- Sys.time()
-
-      batch_df <- df[start_idx:end_idx, ]
-
-      sf_start <- Sys.time()
-      points_sf <- st_as_sf(batch_df, coords = c("longitude", "latitude"), crs = 4326)
-      sf_elapsed <- as.numeric(x = difftime(Sys.time(), sf_start, units = "secs"))
-      message(sprintf(fmt = "  [TIMER] st_as_sf: %ss", round(sf_elapsed, 2)))
-
-      intersect_start <- Sys.time()
-      inside_points <- st_intersects(points_sf, geojson_union, sparse = FALSE)[, 1]
-      intersect_elapsed <- as.numeric(x = difftime(Sys.time(), intersect_start, units = "secs"))
-      message(sprintf(fmt = "  [TIMER] st_intersects: %ss", round(intersect_elapsed, 2)))
-
-      filtered_list[[i]] <- batch_df[inside_points, ]
-
-      batch_elapsed <- as.numeric(x = difftime(Sys.time(), batch_start, units = "secs"))
-      batch_times[i] <- batch_elapsed
-      message(sprintf(fmt = "Batch %s: kept %s of %s points (%ss)", i, sum(inside_points), nrow(x = batch_df), round(batch_elapsed, 2)))
-    }
-
-    message(sprintf(fmt = "Batch processing complete. Average time per batch: %ss", round(mean(batch_times), 2)))
-    filtered_df <- do.call(rbind, filtered_list)
-  } else {
-    message("Creating spatial points (this may take 30-60 seconds)...")
-    sf_start <- Sys.time()
-    points_sf <- st_as_sf(df, coords = c("longitude", "latitude"), crs = 4326)
-    sf_elapsed <- as.numeric(x = difftime(Sys.time(), sf_start, units = "secs"))
-    message(sprintf(fmt = "[TIMER] st_as_sf: %ss", round(sf_elapsed, 2)))
-
-    message("Checking which points are within boundaries...")
-    intersect_start <- Sys.time()
-    inside_points <- st_intersects(points_sf, geojson_union, sparse = FALSE)[, 1]
-    intersect_elapsed <- as.numeric(x = difftime(Sys.time(), intersect_start, units = "secs"))
-    message(sprintf(fmt = "[TIMER] st_intersects: %ss", round(intersect_elapsed, 2)))
-
-    filtered_df <- df[inside_points, ]
-  }
-
-  # Expand back to original data if we pre-aggregated
-  if (spatial_aggregated && exists("df_original")) {
-    message("Expanding back to original temporal data...")
-    step_start <- Sys.time()
-
-    filtered_df <- df_original %>%
-      semi_join(
-        filtered_df %>% select(latitude, longitude),
-        by = c("latitude", "longitude")
-      )
-
-    elapsed <- as.numeric(x = difftime(Sys.time(), step_start, units = "secs"))
-    message(sprintf(fmt = "Expanded to %s original points in %ss", nrow(x = filtered_df), round(elapsed, 2)))
-  }
+  step_start <- Sys.time()
+  dt_df <- data.table::as.data.table(df)
+  dt_inside <- data.table::as.data.table(inside_coords)
+  data.table::setkey(dt_df, latitude, longitude)
+  data.table::setkey(dt_inside, latitude, longitude)
+  filtered_df <- as.data.frame(dt_df[dt_inside, nomatch = NULL])
+  join_elapsed <- as.numeric(x = difftime(Sys.time(), step_start, units = "secs"))
+  message(sprintf(fmt = "[TIMER] Semi-join back: %ss", round(join_elapsed, 3)))
 
   elapsed_time <- as.numeric(x = difftime(Sys.time(), start_time, units = "secs"))
   message(sprintf(fmt = "Spatial filtering complete in %ss: %s of %s points retained (%s%%)", round(elapsed_time, 1), nrow(x = filtered_df), n_before, round(100 * nrow(x = filtered_df) / n_before, 1)))
@@ -517,90 +551,4 @@ combine_netcdf_files <- function(netcdf_files, verbose = FALSE) {
 
   message(sprintf(fmt = "Combined data: %s total data points", nrow(x = combined_df)))
   combined_df
-}
-
-#' Read NetCDF using ncdf4 as fallback when stars fails
-#'
-#' @param netcdf_file Path to NetCDF file
-#' @return data.frame with processed data
-read_netcdf_with_ncdf4 <- function(netcdf_file) {
-  nc <- nc_open(netcdf_file)
-
-  tryCatch({
-    dims <- names(nc$dim)
-    message(sprintf(fmt = "NetCDF dimensions: %s", paste(dims, collapse = ", ")))
-
-    vars <- names(nc$var)
-    coord_vars <- c("lat", "latitude", "lon", "longitude", "time", "valid_time")
-    data_vars <- vars[!vars %in% coord_vars]
-    message(sprintf(fmt = "Data variables: %s", paste(data_vars, collapse = ", ")))
-
-    if ("latitude" %in% names(nc$dim)) {
-      lats <- ncvar_get(nc, "latitude")
-    } else if ("lat" %in% names(nc$dim)) {
-      lats <- ncvar_get(nc, "lat")
-    } else {
-      stop("No latitude dimension found")
-    }
-
-    if ("longitude" %in% names(nc$dim)) {
-      lons <- ncvar_get(nc, "longitude")
-    } else if ("lon" %in% names(nc$dim)) {
-      lons <- ncvar_get(nc, "lon")
-    } else {
-      stop("No longitude dimension found")
-    }
-
-    times <- NULL
-    if ("time" %in% names(nc$dim)) {
-      times <- ncvar_get(nc, "time")
-    } else if ("valid_time" %in% names(nc$dim)) {
-      times <- ncvar_get(nc, "valid_time")
-    }
-
-    all_data <- list()
-
-    for (var in data_vars) {
-      var_data <- ncvar_get(nc, var)
-
-      if (!is.null(times)) {
-        coords <- expand.grid(
-          longitude = lons,
-          latitude = lats,
-          time_idx = seq_along(along.with = times)
-        )
-        coords$datetime <- times[coords$time_idx]
-        coords$time_idx <- NULL
-        coords$value <- as.vector(var_data)
-      } else {
-        coords <- expand.grid(longitude = lons, latitude = lats)
-        coords$datetime <- as.POSIXct(x = "2023-01-01 12:00:00", tz = "UTC")
-        coords$value <- as.vector(var_data)
-      }
-
-      coords$variable <- var
-      all_data[[var]] <- coords
-    }
-
-    result_df <- do.call(rbind, all_data)
-    rownames(result_df) <- NULL
-
-    if (!is.null(times) && is.numeric(result_df$datetime)) {
-      tryCatch(
-        {
-          result_df$datetime <- as.POSIXct(x = result_df$datetime * 3600, origin = "1900-01-01", tz = "UTC")
-        },
-        error = function(e) {
-          unique_times <- sort(x = unique(x = result_df$datetime))
-          time_map <- seq(as.POSIXct(x = "2023-01-01 12:00:00", tz = "UTC"), by = "day", length.out = length(x = unique_times))
-          names(time_map) <- unique_times
-          result_df$datetime <- time_map[as.character(x = result_df$datetime)]
-        }
-      )
-    }
-
-    result_df
-  }, finally = {
-    nc_close(nc)
-  })
 }
