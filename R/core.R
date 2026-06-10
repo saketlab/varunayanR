@@ -202,7 +202,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
     tryCatch(
       {
         if (dataset_type == "single") {
-          download_era5_single(
+          result_file <- download_era5_single(
             variables = variables,
             start_date = chunk_start,
             end_date = chunk_end,
@@ -216,7 +216,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
             verbose = verbose
           )
         } else {
-          download_era5_pressure(
+          result_file <- download_era5_pressure(
             variables = variables,
             pressure_levels = pressure_levels,
             start_date = chunk_start,
@@ -229,7 +229,7 @@ download_era5_data <- function(dataset_type, variables, start_dt, end_dt, area,
             verbose = verbose
           )
         }
-        return(chunk_file)
+        return(result_file)
       },
       cds_request_too_large = function(e) {
         s <- as.Date(chunk_start)
