@@ -77,14 +77,20 @@ read_imd_temperature <- function(file_path, var_type, year) {
 #' @param file_path Path to IMD NetCDF file (.nc).
 #' @param resolution Spatial resolution: 0.25 or 1.0.
 #' @param year Year of the data.
+#' @param bbox Optional named list/vector (north, south, east, west). When set,
+#'   only that spatial slab is read off disk (fast path); NULL reads the full grid.
 #' @return data.frame with columns: date, latitude, longitude, rainfall
 #' @export
 #' @examples
 #' \dontrun{
 #' rain_data <- read_imd_rainfall("imd_rainfall_0.25_2023.nc", 0.25, 2023)
 #' }
-read_imd_rainfall <- function(file_path, resolution, year) {
+read_imd_rainfall <- function(file_path, resolution, year, bbox = NULL) {
   if (!file.exists(file_path)) stop("File not found: ", file_path)
+
+  if (!is.null(bbox)) {
+    return(read_imd_rainfall_cropped(file_path, year, bbox))
+  }
 
   dataset_id <- paste0("rainfall_", resolution)
   grid_specs <- get_imd_grid_specs(dataset_id)
@@ -184,6 +190,72 @@ read_imd_rainfall_ncdf4 <- function(file_path, grid_specs, year) {
   })
 }
 
+#' Read an IMD rainfall NetCDF, cropped to a bbox at read time (fast path)
+#'
+#' Reads only the spatial hyperslab covering \code{bbox} directly off disk with
+#' \code{ncvar_get(start, count)}, instead of materializing the whole national
+#' grid and filtering afterwards. For a small region over many years this is
+#' orders of magnitude faster and lighter (GB -> MB, minutes -> seconds).
+#'
+#' @param file_path Path to IMD NetCDF rainfall file.
+#' @param year Year of the data (for the date axis).
+#' @param bbox Named numeric vector/list with north, south, east, west.
+#' @return data.frame with columns date, latitude, longitude, rainfall.
+#' @keywords internal
+read_imd_rainfall_cropped <- function(file_path, year, bbox) {
+  north <- bbox[["north"]]
+  south <- bbox[["south"]]
+  east <- bbox[["east"]]
+  west <- bbox[["west"]]
+
+  nc <- nc_open(file_path)
+  on.exit(nc_close(nc), add = TRUE)
+
+  vars <- names(nc$var)
+  latnm <- if ("LATITUDE" %in% names(nc$dim)) "LATITUDE" else "lat"
+  lonnm <- if ("LONGITUDE" %in% names(nc$dim)) "LONGITUDE" else "lon"
+  rainnm <- if ("RAINFALL" %in% vars) {
+    "RAINFALL"
+  } else if ("rf" %in% vars) {
+    "rf"
+  } else {
+    setdiff(vars, c(latnm, lonnm, "TIME", "time"))[1]
+  }
+
+  lats <- as.numeric(nc$dim[[latnm]]$vals)
+  lons <- as.numeric(nc$dim[[lonnm]]$vals)
+
+  # IMD lon/lat are ascending, so min:max of the matches is a contiguous slab.
+  li <- which(lats >= south & lats <= north)
+  lj <- which(lons >= west & lons <= east)
+  if (length(li) == 0L) li <- which.min(abs(lats - (south + north) / 2)) # bbox finer than grid
+  if (length(lj) == 0L) lj <- which.min(abs(lons - (west + east) / 2))
+  i0 <- min(li)
+  ni <- max(li) - i0 + 1L
+  j0 <- min(lj)
+  nj <- max(lj) - j0 + 1L
+
+  # dims are [LON, LAT, TIME]; collapse_degen=FALSE keeps single-cell axes so as.vector aligns.
+  slab <- ncvar_get(nc, rainnm,
+    start = c(j0, i0, 1L), count = c(nj, ni, -1L),
+    collapse_degen = FALSE
+  )
+
+  sub_lons <- lons[j0:(j0 + nj - 1L)]
+  sub_lats <- lats[i0:(i0 + ni - 1L)]
+  n_days <- dim(slab)[3]
+  dates <- seq(as.Date(paste0(year, "-01-01")), by = "day", length.out = n_days)
+
+  df <- expand.grid(
+    longitude = sub_lons, latitude = sub_lats, date = dates,
+    KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+  )
+  df$rainfall <- as.vector(slab)
+  df <- df[!is.na(df$rainfall) & df$rainfall > -900, c("date", "latitude", "longitude", "rainfall")]
+  rownames(df) <- NULL
+  df
+}
+
 #' Process multiple IMD files
 #'
 #' Reads and combines multiple IMD data files.
@@ -192,6 +264,8 @@ read_imd_rainfall_ncdf4 <- function(file_path, grid_specs, year) {
 #' @param var_type Variable type: "rain", "tmax", or "tmin".
 #' @param resolution Resolution (for rainfall): 0.25 or 1.0.
 #' @param years Integer vector. Years corresponding to each file.
+#' @param bbox Optional named list/vector (north, south, east, west) passed to the
+#'   rainfall reader to crop at read time; NULL reads the full grid (default).
 #' @return data.frame with combined data
 #' @export
 #' @examples
@@ -199,7 +273,7 @@ read_imd_rainfall_ncdf4 <- function(file_path, grid_specs, year) {
 #' files <- c("imd_tmax_1.0_2023.grd", "imd_tmax_1.0_2024.grd")
 #' data <- process_imd_files(files, "tmax", years = c(2023, 2024))
 #' }
-process_imd_files <- function(file_paths, var_type, resolution = NULL, years = NULL) {
+process_imd_files <- function(file_paths, var_type, resolution = NULL, years = NULL, bbox = NULL) {
   if (length(x = file_paths) == 0) stop("No files provided")
 
   years <- years %||% extract_years_from_filenames(file_paths)
@@ -212,7 +286,7 @@ process_imd_files <- function(file_paths, var_type, resolution = NULL, years = N
       {
         if (var_type == "rain") {
           res <- resolution %||% if (grepl(pattern = "0.25", file_paths[i])) 0.25 else 1.0
-          read_imd_rainfall(file_paths[i], res, years[i])
+          read_imd_rainfall(file_paths[i], res, years[i], bbox = bbox)
         } else if (var_type %in% c("tmax", "tmin")) {
           read_imd_temperature(file_paths[i], var_type, years[i])
         } else {
@@ -229,7 +303,7 @@ process_imd_files <- function(file_paths, var_type, resolution = NULL, years = N
   all_data <- Filter(Negate(is.null), all_data)
   if (length(x = all_data) == 0) stop("No files were successfully processed")
 
-  combined_df <- do.call(rbind, all_data)
+  combined_df <- as.data.frame(data.table::rbindlist(all_data))
   combined_df <- combined_df[order(combined_df$date, combined_df$latitude, combined_df$longitude), ]
   rownames(combined_df) <- NULL
 
@@ -309,7 +383,6 @@ aggregate_imd_by_frequency <- function(data, frequency = "daily") {
       DT[, time_group := year(date) * 100L + month(date)]
     }
 
-    # Sum for rainfall, mean for temperature
     agg_fun <- if (value_col == "rainfall") sum else mean
 
     aggregated <- DT[, .(value = agg_fun(get(..value_col), na.rm = TRUE)),

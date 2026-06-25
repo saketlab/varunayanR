@@ -4,7 +4,7 @@
 \alias{read_imd_rainfall}
 \title{Read IMD NetCDF rainfall file}
 \usage{
-read_imd_rainfall(file_path, resolution, year)
+read_imd_rainfall(file_path, resolution, year, bbox = NULL)
 }
 \arguments{
 \item{file_path}{Path to IMD NetCDF file (.nc).}
@@ -12,6 +12,9 @@ read_imd_rainfall(file_path, resolution, year)
 \item{resolution}{Spatial resolution: 0.25 or 1.0.}
 
 \item{year}{Year of the data.}
+
+\item{bbox}{Optional named list/vector (north, south, east, west). When set,
+only that spatial slab is read off disk (fast path); NULL reads the full grid.}
 }
 \value{
 data.frame with columns: date, latitude, longitude, rainfall

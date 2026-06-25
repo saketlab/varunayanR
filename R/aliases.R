@@ -25,6 +25,10 @@ IMDRainfallBbox <- function(...) imd_rainfall_bbox(...)
 #' @export
 IMDRainfallGeojson <- function(...) imd_rainfall_geojson(...)
 
+#' @rdname imd_rainfall_point
+#' @export
+IMDRainfallPoint <- function(...) imd_rainfall_point(...)
+
 #' @rdname imd_temperature_bbox
 #' @export
 IMDTemperatureBbox <- function(...) imd_temperature_bbox(...)

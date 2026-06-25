@@ -39,7 +39,7 @@ imd_rainfall_bbox <- function(request_id, start_year, end_year,
   message("=== IMD Rainfall Download and Processing ===")
   message(sprintf(fmt = "Request ID: %s", request_id))
   message(sprintf(fmt = "Years: %s to %s", start_year, end_year))
-  message(sprintf(fmt = "Resolution: %s\u00b0", resolution))
+  message(sprintf(fmt = "Resolution: %s°", resolution))
   message(sprintf(fmt = "Bounding box: N:%s, S:%s, E:%s, W:%s", north, south, east, west))
 
   if (!validate_bbox(north, south, east, west)) {
@@ -61,7 +61,8 @@ imd_rainfall_bbox <- function(request_id, start_year, end_year,
     file_paths = downloaded_files,
     var_type = "rain",
     resolution = resolution,
-    years = years
+    years = years,
+    bbox = list(north = north, south = south, east = east, west = west)
   )
 
   filtered_data <- filter_imd_by_bbox(
@@ -92,6 +93,70 @@ imd_rainfall_bbox <- function(request_id, start_year, end_year,
   message(sprintf(fmt = "Final dataset: %s data points", nrow(x = filtered_data)))
 
   filtered_data
+}
+
+#' Download and process IMD rainfall for a single point (nearest grid cell)
+#'
+#' Extracts the daily rainfall series for the IMD grid cell nearest to a
+#' (lat, lon). Reads only that one cell off disk per year, so it is the cheapest
+#' way to get a long series for a location.
+#'
+#' @param request_id Unique identifier for the request.
+#' @param start_year Start year (1901-2024).
+#' @param end_year End year (1901-2024).
+#' @param latitude Point latitude.
+#' @param longitude Point longitude.
+#' @param resolution Spatial resolution: 0.25 or 1.0 degrees (default: 0.25).
+#' @param frequency Temporal frequency: "daily", "monthly", "yearly" (default: "daily").
+#' @param save_raw Whether to save raw downloaded files (default: FALSE).
+#' @param output_dir Directory to save files (default: tempdir()).
+#' @param use_cache Whether to use cached data if available (default: TRUE).
+#' @return data.frame with the nearest cell's rainfall series.
+#' @export
+#' @examples
+#' \dontrun{
+#' powai <- imd_rainfall_point("powai", 1901, 2024, 19.1277, 72.9047)
+#' }
+imd_rainfall_point <- function(request_id, start_year, end_year,
+                               latitude, longitude,
+                               resolution = 0.25, frequency = "daily",
+                               save_raw = FALSE, output_dir = tempdir(),
+                               use_cache = TRUE) {
+  message("=== IMD Rainfall Download and Processing (point) ===")
+  message(sprintf(fmt = "Request ID: %s", request_id))
+  message(sprintf(fmt = "Point: lat %.4f, lon %.4f", latitude, longitude))
+
+  downloaded_files <- download_imd_rainfall(
+    start_year = start_year, end_year = end_year,
+    resolution = resolution, output_dir = output_dir, use_cache = use_cache
+  )
+  if (length(x = downloaded_files) == 0) stop("No files were successfully downloaded")
+
+  pt_bbox <- list(north = latitude, south = latitude, east = longitude, west = longitude)
+  data <- process_imd_files(
+    file_paths = downloaded_files, var_type = "rain",
+    resolution = resolution, years = start_year:end_year, bbox = pt_bbox
+  )
+
+  i <- which.min((data$latitude - latitude)^2 + (data$longitude - longitude)^2)
+  near_lat <- data$latitude[i]
+  near_lon <- data$longitude[i]
+  data <- data[data$latitude == near_lat & data$longitude == near_lon, ]
+  message(sprintf(fmt = "Nearest cell: lat %.3f, lon %.3f", near_lat, near_lon))
+
+  if (frequency != "daily") data <- aggregate_imd_by_frequency(data, frequency)
+
+  save_imd_results(
+    data = data, request_id = request_id, var_type = "rainfall",
+    resolution = resolution, frequency = frequency, output_dir = output_dir
+  )
+
+  if (!save_raw) {
+    unlink(downloaded_files)
+    message("Cleaned up raw downloaded files")
+  }
+  message(sprintf(fmt = "Final dataset: %s data points", nrow(x = data)))
+  data
 }
 
 #' Download and process IMD rainfall data for a GeoJSON region
@@ -145,7 +210,8 @@ imd_rainfall_geojson <- function(request_id, start_year, end_year, geojson_file,
     file_paths = downloaded_files,
     var_type = "rain",
     resolution = resolution,
-    years = years
+    years = years,
+    bbox = list(north = north, south = south, east = east, west = west)
   )
 
   filtered_data <- filter_imd_by_geojson(

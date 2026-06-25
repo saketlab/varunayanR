@@ -4,7 +4,13 @@
 \alias{process_imd_files}
 \title{Process multiple IMD files}
 \usage{
-process_imd_files(file_paths, var_type, resolution = NULL, years = NULL)
+process_imd_files(
+  file_paths,
+  var_type,
+  resolution = NULL,
+  years = NULL,
+  bbox = NULL
+)
 }
 \arguments{
 \item{file_paths}{Character vector of file paths.}
@@ -14,6 +20,9 @@ process_imd_files(file_paths, var_type, resolution = NULL, years = NULL)
 \item{resolution}{Resolution (for rainfall): 0.25 or 1.0.}
 
 \item{years}{Integer vector. Years corresponding to each file.}
+
+\item{bbox}{Optional named list/vector (north, south, east, west) passed to the
+rainfall reader to crop at read time; NULL reads the full grid (default).}
 }
 \value{
 data.frame with combined data
