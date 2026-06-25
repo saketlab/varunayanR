@@ -39,7 +39,7 @@ imd_rainfall_bbox <- function(request_id, start_year, end_year,
   message("=== IMD Rainfall Download and Processing ===")
   message(sprintf(fmt = "Request ID: %s", request_id))
   message(sprintf(fmt = "Years: %s to %s", start_year, end_year))
-  message(sprintf(fmt = "Resolution: %s°", resolution))
+  message(sprintf(fmt = "Resolution: %s\u00b0", resolution))
   message(sprintf(fmt = "Bounding box: N:%s, S:%s, E:%s, W:%s", north, south, east, west))
 
   if (!validate_bbox(north, south, east, west)) {
@@ -111,6 +111,7 @@ imd_rainfall_bbox <- function(request_id, start_year, end_year,
 #' @param save_raw Whether to save raw downloaded files (default: FALSE).
 #' @param output_dir Directory to save files (default: tempdir()).
 #' @param use_cache Whether to use cached data if available (default: TRUE).
+#' @param ... Arguments passed to the main function (used by aliases).
 #' @return data.frame with the nearest cell's rainfall series.
 #' @export
 #' @examples

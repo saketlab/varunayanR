@@ -21,6 +21,8 @@ imd_rainfall_point(
 )
 }
 \arguments{
+\item{...}{Arguments passed to the main function (used by aliases).}
+
 \item{request_id}{Unique identifier for the request.}
 
 \item{start_year}{Start year (1901-2024).}
