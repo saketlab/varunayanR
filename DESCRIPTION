@@ -2,7 +2,8 @@ Package: varunayan
 Type: Package
 Title: Package for downloading and processing climatic variables from ERA5 and IMD
 Version: 0.1.1.9006
-Authors@R: c(person("Saket", "Choudhary", email = "saketc@iitb.ac.in", role = c("aut", "cre")))
+Authors@R: c(person("Saket", "Choudhary", email = "saketc@iitb.ac.in", role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0001-5202-7633")))
 Author: Saket Choudhary [aut,cre]
 Maintainer: Saket Choudhary <saketc@iitb.ac.in>
 Description: R package for downloading and processing ERA5 climate data, IMD
@@ -31,7 +32,8 @@ Imports:
     tools,
     utils,
     httr,
-    digest
+    digest,
+    parallel
 Suggests:
     testthat (>= 3.0.0),
     knitr,

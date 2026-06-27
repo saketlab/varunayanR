@@ -20,11 +20,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Saket Choudhary \email{saketc@iitb.ac.in}
+\strong{Maintainer}: Saket Choudhary \email{saketc@iitb.ac.in} (\href{https://orcid.org/0000-0001-5202-7633}{ORCID})
 
 Authors:
 \itemize{
-  \item Saket Choudhary \email{saketc@iitb.ac.in}
+  \item Saket Choudhary \email{saketc@iitb.ac.in} (\href{https://orcid.org/0000-0001-5202-7633}{ORCID})
 }
 
 }

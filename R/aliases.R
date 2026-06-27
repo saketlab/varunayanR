@@ -33,6 +33,10 @@ IMDTemperatureBbox <- function(...) imd_temperature_bbox(...)
 #' @export
 IMDTemperatureGeojson <- function(...) imd_temperature_geojson(...)
 
+#' @rdname imd_stations
+#' @export
+IMDStations <- function(...) imd_stations(...)
+
 # Setup and credentials
 #' @rdname setup_cds_credentials
 #' @export
