@@ -9,4 +9,5 @@
 ^inst/doc$
 ^docs$
 ^.*\.geojson
-^\.claude$
+^varunayanR\.Rcheck$
+^varunayan_.*\.tar\.gz$

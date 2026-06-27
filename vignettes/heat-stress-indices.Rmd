@@ -10,10 +10,11 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+# ponytail: eval=FALSE — needs live CDS API; CI with CDS_API_KEY can override
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#",
-  eval = TRUE,
+  eval = FALSE,
   fig.width = 10,
   fig.height = 7,
   fig.dpi = 300,
@@ -153,17 +154,10 @@ states_url <- "https://bharatviz.saketlab.org/India_LGD_states.geojson"
 states_file <- "indian_states.geojson"
 
 if (!file.exists(states_file)) {
-  try(download.file(states_url, states_file, mode = "wb"), silent = TRUE)
+  download.file(states_url, states_file, mode = "wb")
 }
 
-states_sf <- tryCatch(
-  sf::st_read(states_file, quiet = TRUE),
-  error = function(e) NULL
-)
-
-if (is.null(states_sf)) {
-  knitr::opts_chunk$set(eval = FALSE)
-}
+states_sf <- sf::st_read(states_file, quiet = TRUE)
 ```
 
 ```{r download_era5}

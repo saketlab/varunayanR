@@ -1,4 +1,4 @@
-url: https://saketlab.github.io/varunayanR/
+url: https://varunayanr.saketlab.org/
 
 development:
   mode: release
@@ -10,6 +10,13 @@ template:
   bslib:
     primary: "#0071e3"
     border-radius: "0.5rem"
+  opengraph:
+    image:
+      src: man/figures/og-card.png
+      alt: "varunayanR - ERA5, IMD, HadEX3, CRU TS climate data for R"
+    twitter:
+      card: summary_large_image
+      creator: "@saketkc"
   includes:
     in_header: |
       <link rel="stylesheet" href="extra.css">
@@ -20,22 +27,10 @@ template:
         gtag('js', new Date());
         gtag('config', 'G-L78L5ESPGT');
       </script>
-      <meta name="keywords" content="ERA5, IMD, climate data, R package, India weather, reanalysis, precipitation, temperature, NetCDF, climate analysis, Copernicus, ECMWF, Indian Meteorological Department, gridded data, monsoon, rainfall">
+      <meta name="keywords" content="ERA5, IMD, HadEX3, CRU TS, climate data, R package, India weather, reanalysis, precipitation, temperature, NetCDF, heat stress, WBGT, UTCI, Copernicus, ECMWF, Indian Meteorological Department, gridded data, monsoon, rainfall, climate extremes, ETCCDI">
       <meta name="author" content="Saket Choudhary">
       <meta name="robots" content="index, follow">
       <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-      <link rel="canonical" href="https://saketlab.github.io/varunayanR/">
-      <meta property="og:type" content="website">
-      <meta property="og:url" content="https://saketlab.github.io/varunayanR/">
-      <meta property="og:title" content="varunayanR - ERA5 and IMD Climate Data for R">
-      <meta property="og:description" content="R package for downloading ERA5 reanalysis and IMD gridded climate data for India. Access temperature, precipitation, and weather variables for custom regions.">
-      <meta property="og:image" content="https://saketlab.github.io/varunayanR/logo.png">
-      <meta property="og:site_name" content="varunayanR">
-      <meta property="og:locale" content="en_US">
-      <meta name="twitter:card" content="summary_large_image">
-      <meta name="twitter:title" content="varunayanR - ERA5 and IMD Climate Data for R">
-      <meta name="twitter:description" content="R package for downloading ERA5 reanalysis and IMD gridded climate data for India.">
-      <meta name="twitter:image" content="https://saketlab.github.io/varunayanR/logo.png">
       <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -48,23 +43,25 @@ template:
           "price": "0",
           "priceCurrency": "USD"
         },
-        "description": "R package for downloading and processing ERA5 reanalysis and IMD gridded climate data for India",
+        "description": "R package for downloading and processing climate data from ERA5, IMD, HadEX3, and CRU TS for India. Supports bounding box, GeoJSON, and point extraction with heat stress indices.",
         "author": {
           "@type": "Person",
           "name": "Saket Choudhary",
           "url": "https://saketlab.org"
         },
-        "url": "https://saketlab.github.io/varunayanR/",
+        "url": "https://varunayanr.saketlab.org/",
         "downloadUrl": "https://github.com/saketlab/varunayanR",
-        "softwareVersion": "0.1.0",
+        "softwareVersion": "0.1.1",
         "programmingLanguage": "R"
       }
       </script>
 
 home:
-  title: "varunayanR - ERA5 and IMD climate data for R"
+  title: "varunayanR - ERA5, IMD, HadEX3 & CRU TS Climate Data for R"
   description: >
-    R package for downloading and processing ERA5 reanalysis and IMD gridded climate data.
+    R package for downloading and processing climate reanalysis data from ERA5, IMD,
+    HadEX3, and CRU TS for India. Extract data via bounding boxes, GeoJSON, or points.
+    Calculate heat stress indices (WBGT, UTCI, Humidex, Wet Bulb).
 
   links:
   - text: Browse source code

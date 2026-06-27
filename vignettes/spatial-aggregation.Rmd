@@ -10,8 +10,9 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+# ponytail: eval=FALSE — no pre-built .rds; needs live CDS + IMD
 knitr::opts_chunk$set(
-  collapse = TRUE, comment = "#>", eval = TRUE,
+  collapse = TRUE, comment = "#>", eval = FALSE,
   fig.width = 7, fig.height = 5, warning = FALSE, message = FALSE
 )
 ```

@@ -1,10 +1,9 @@
 Package: varunayan
 Type: Package
-Title: Package for downloading and processing climatic variables from ERA5 and IMD
-Version: 0.1.1.9006
-Authors@R: c(person("Saket", "Choudhary", email = "saketc@iitb.ac.in", role = c("aut", "cre")))
-Author: Saket Choudhary [aut,cre]
-Maintainer: Saket Choudhary <saketc@iitb.ac.in>
+Title: Download and Process Climate Data from ERA5, IMD, HadEX3, and CRU TS
+Version: 0.1.0.9001
+Authors@R: c(person("Saket", "Choudhary", email = "saketc@iitb.ac.in", role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0001-5202-7633")))
 Description: R package for downloading and processing ERA5 climate data, IMD
     (Indian Meteorological Department) gridded data, and HadEX3 global climate
     extremes (ETCCDI indices) for custom geographical regions. Provides functions to
@@ -12,7 +11,7 @@ Description: R package for downloading and processing ERA5 climate data, IMD
     and calculate heat indices. Supports various temporal frequencies and spatial
     resolutions with analysis-ready outputs.
 License: MIT + file LICENSE
-URL: https://saketlab.github.io/varunayanR, https://github.com/saketlab/varunayanR
+URL: https://varunayanr.saketlab.org, https://github.com/saketlab/varunayanR
 BugReports: https://github.com/saketlab/varunayanR/issues
 Depends:
     R (>= 4.1.0)
@@ -31,7 +30,8 @@ Imports:
     tools,
     utils,
     httr,
-    digest
+    digest,
+    parallel
 Suggests:
     testthat (>= 3.0.0),
     knitr,

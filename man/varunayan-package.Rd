@@ -4,7 +4,7 @@
 \name{varunayan-package}
 \alias{varunayan}
 \alias{varunayan-package}
-\title{varunayan: Package for downloading and processing climatic variables from ERA5 and IMD}
+\title{varunayan: Download and Process Climate Data from ERA5, IMD, HadEX3, and CRU TS}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
@@ -13,18 +13,18 @@ R package for downloading and processing ERA5 climate data, IMD (Indian Meteorol
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://saketlab.github.io/varunayanR}
+  \item \url{https://varunayanr.saketlab.org}
   \item \url{https://github.com/saketlab/varunayanR}
   \item Report bugs at \url{https://github.com/saketlab/varunayanR/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Saket Choudhary \email{saketc@iitb.ac.in}
+\strong{Maintainer}: Saket Choudhary \email{saketc@iitb.ac.in} (\href{https://orcid.org/0000-0001-5202-7633}{ORCID})
 
 Authors:
 \itemize{
-  \item Saket Choudhary \email{saketc@iitb.ac.in}
+  \item Saket Choudhary \email{saketc@iitb.ac.in} (\href{https://orcid.org/0000-0001-5202-7633}{ORCID})
 }
 
 }
