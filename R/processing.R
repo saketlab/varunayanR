@@ -514,11 +514,11 @@ create_temporal_chunks <- function(start_date, end_date, frequency,
   total_days <- as.numeric(x = end_dt - start_dt) + 1
 
   is_monthly <- identical(x = frequency, y = "monthly")
-  span <- compute_optimal_chunk_size(n_variables, frequency)  # years for monthly, days otherwise
+  span <- compute_optimal_chunk_size(n_variables, frequency) # years for monthly, days otherwise
 
   if (is.na(x = max_days_per_chunk)) {
     max_days_per_chunk <- if (is_monthly) {
-      span * 366L  # years -> an upper bound in days; leap-safe, one job either way
+      span * 366L # years -> an upper bound in days; leap-safe, one job either way
     } else {
       span
     }

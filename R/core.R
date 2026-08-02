@@ -598,7 +598,8 @@ era5ify_point <- function(request_id, variables, start_date, end_date, lat, lon,
   message(sprintf(fmt = "Target point: (%s, %s)", lat, lon))
 
   chunks <- create_temporal_chunks(validated$start_dt, validated$end_dt, frequency,
-    n_variables = length(x = variables))
+    n_variables = length(x = variables)
+  )
 
   is_single <- validated$dataset_type == "single"
   download_func <- if (is_single) download_era5_single else download_era5_pressure

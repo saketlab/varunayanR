@@ -496,8 +496,10 @@ imd_temperature_by_region <- function(request_id, start_year, end_year,
   }
 
   read_all <- function(vt) {
-    files <- download_imd_temperature(start_year, end_year, var_type = vt,
-      use_cache = use_cache)
+    files <- download_imd_temperature(start_year, end_year,
+      var_type = vt,
+      use_cache = use_cache
+    )
     yrs <- start_year:end_year
     do.call(rbind, Map(function(f, y) read_imd_temperature(f, vt, y), files, yrs))
   }
@@ -508,7 +510,8 @@ imd_temperature_by_region <- function(request_id, start_year, end_year,
     uc <- unique(df[, c("longitude", "latitude")])
     s <- sf::st_join(
       sf::st_as_sf(uc, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE),
-      regions, join = sf::st_within
+      regions,
+      join = sf::st_within
     )
     k <- sf::st_drop_geometry(s)[, c("longitude", "latitude", feature_col)]
     names(k)[3] <- "region"
@@ -538,8 +541,10 @@ imd_temperature_by_region <- function(request_id, start_year, end_year,
   } else {
     tmax_raw <- read_all("tmax")
     tmin_raw <- read_all("tmin")
-    raw <- merge(tmax_raw, tmin_raw, by = c("longitude", "latitude", "date"),
-      suffixes = c("_max", "_min"))
+    raw <- merge(tmax_raw, tmin_raw,
+      by = c("longitude", "latitude", "date"),
+      suffixes = c("_max", "_min")
+    )
     raw$temperature <- (raw$temperature_max + raw$temperature_min) / 2
   }
   key <- build_key(raw)
