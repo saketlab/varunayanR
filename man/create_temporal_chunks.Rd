@@ -8,7 +8,8 @@ create_temporal_chunks(
   start_date,
   end_date,
   frequency,
-  max_days_per_chunk = 31
+  n_variables = 1L,
+  max_days_per_chunk = NA
 )
 }
 \arguments{
@@ -16,13 +17,18 @@ create_temporal_chunks(
 
 \item{end_date}{End date}
 
-\item{frequency}{Temporal frequency}
+\item{frequency}{Temporal frequency ("hourly", "daily", "monthly")}
 
-\item{max_days_per_chunk}{Maximum days per chunk}
+\item{n_variables}{Number of variables in the request (fields = vars x steps)}
+
+\item{max_days_per_chunk}{Maximum days per chunk. NA (default) -> derive from
+frequency via \code{compute_optimal_chunk_size}.}
 }
 \value{
 List of date pairs for chunked processing
 }
 \description{
-Apply temporal chunking for large date ranges
+Chunk size defaults to \code{compute_optimal_chunk_size(frequency)}, which
+scales with the CDS field limit (hourly: 24 fields/day, daily: 1/day,
+monthly: 12/year) so each chunk fills one CDS job.
 }

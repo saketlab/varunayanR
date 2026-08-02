@@ -496,18 +496,56 @@ aggregate_by_frequency <- function(data, frequency, verbose = FALSE) {
 
 #' Apply temporal chunking for large date ranges
 #'
+#' Chunk size defaults to `compute_optimal_chunk_size(frequency)`, which
+#' scales with the CDS field limit (hourly: 24 fields/day, daily: 1/day,
+#' monthly: 12/year) so each chunk fills one CDS job.
+#'
 #' @param start_date Start date
 #' @param end_date End date
-#' @param frequency Temporal frequency
-#' @param max_days_per_chunk Maximum days per chunk
+#' @param frequency Temporal frequency ("hourly", "daily", "monthly")
+#' @param n_variables Number of variables in the request (fields = vars x steps)
+#' @param max_days_per_chunk Maximum days per chunk. NA (default) -> derive from
+#'   frequency via `compute_optimal_chunk_size`.
 #' @return List of date pairs for chunked processing
-create_temporal_chunks <- function(start_date, end_date, frequency, max_days_per_chunk = 31) {
+create_temporal_chunks <- function(start_date, end_date, frequency,
+                                   n_variables = 1L, max_days_per_chunk = NA) {
   start_dt <- as.Date(x = start_date)
   end_dt <- as.Date(x = end_date)
   total_days <- as.numeric(x = end_dt - start_dt) + 1
 
+  is_monthly <- identical(x = frequency, y = "monthly")
+  span <- compute_optimal_chunk_size(n_variables, frequency)  # years for monthly, days otherwise
+
+  if (is.na(x = max_days_per_chunk)) {
+    max_days_per_chunk <- if (is_monthly) {
+      span * 366L  # years -> an upper bound in days; leap-safe, one job either way
+    } else {
+      span
+    }
+  }
+
   if (total_days <= max_days_per_chunk) {
     return(list(list(start = start_dt, end = end_dt)))
+  }
+
+  # The monthly-means product is addressed by whole months, so split on YEAR
+  # boundaries. A mid-month cut would drop or duplicate the boundary month.
+  if (is_monthly) {
+    max_years <- max(span, 1L)
+    start_year <- as.integer(format(start_dt, "%Y"))
+    end_year <- as.integer(format(end_dt, "%Y"))
+    chunks <- list()
+    yr <- start_year
+    while (yr <= end_year) {
+      yr_end <- min(yr + max_years - 1L, end_year)
+      chunks[[length(x = chunks) + 1L]] <- list(
+        start = as.Date(sprintf("%d-01-01", yr)),
+        end   = as.Date(sprintf("%d-12-31", yr_end))
+      )
+      yr <- yr_end + 1L
+    }
+    message(sprintf(fmt = "Large date range detected. Processing in %s chunks.", length(x = chunks)))
+    return(chunks)
   }
 
   chunks <- list()

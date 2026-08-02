@@ -514,6 +514,11 @@ era5ify_bbox <- function(request_id, variables, start_date, end_date,
 #'   When TRUE, temperature variables are returned in Celsius (converted from Kelvin)
 #'   and precipitation variables are returned in mm (converted from meters).
 #' @param verbose Whether to print detailed progress messages.
+#' @param use_timeseries_api Whether to use the CDS time-series endpoint, which
+#'   serves a point directly and is much faster than subsetting a gridded
+#'   download (default: NA, meaning use it for hourly single-level requests,
+#'   the only ones it supports). Set FALSE to force the gridded download. The
+#'   gridded download is used automatically if the endpoint is unavailable.
 #' @param ... Arguments passed to the main function (used by aliases).
 #'
 #' @return data.frame with processed climate data. When `convert_units = TRUE`:
@@ -540,11 +545,47 @@ era5ify_bbox <- function(request_id, variables, start_date, end_date,
 era5ify_point <- function(request_id, variables, start_date, end_date, lat, lon,
                           dataset_type = "single", pressure_levels = NULL,
                           frequency = "hourly", save_raw = FALSE, output_dir = tempdir(),
-                          use_cache = TRUE, convert_units = TRUE, verbose = FALSE) {
+                          use_cache = TRUE, convert_units = TRUE, verbose = FALSE,
+                          use_timeseries_api = NA) {
   if (lat < -90 || lat > 90) stop("Latitude must be between -90 and 90 degrees")
   if (lon < -180 || lon > 180) stop("Longitude must be between -180 and 180 degrees")
 
   validated <- validate_era5_inputs(dataset_type, variables, start_date, end_date)
+
+  # The time-series endpoint serves a point directly and only covers hourly
+  # single-level data; everything else uses the gridded path below.
+  if (is.na(x = use_timeseries_api)) {
+    use_timeseries_api <- identical(x = validated$dataset_type, y = "single") &&
+      identical(x = frequency, y = "hourly")
+  }
+  if (isTRUE(x = use_timeseries_api)) {
+    if (!identical(x = validated$dataset_type, y = "single") ||
+      !identical(x = frequency, y = "hourly")) {
+      stop("use_timeseries_api requires dataset_type = 'single' and frequency = 'hourly'")
+    }
+    message("Using CDS time-series endpoint")
+    timeseries_data <- tryCatch(
+      download_era5_timeseries(
+        variables = variables,
+        start_date = validated$start_dt,
+        end_date = validated$end_dt,
+        lat = lat, lon = lon,
+        output_dir = output_dir,
+        verbose = verbose
+      ),
+      error = function(e) {
+        message(sprintf(
+          fmt = "Time-series endpoint unavailable (%s); using gridded download",
+          conditionMessage(e)
+        ))
+        NULL
+      }
+    )
+    if (!is.null(x = timeseries_data)) {
+      if (convert_units) timeseries_data <- convert_era5_units(timeseries_data)
+      return(timeseries_data)
+    }
+  }
 
   buffer <- 0.5
   area <- c(
@@ -556,24 +597,31 @@ era5ify_point <- function(request_id, variables, start_date, end_date, lat, lon,
   message(sprintf(fmt = "Request ID: %s", request_id))
   message(sprintf(fmt = "Target point: (%s, %s)", lat, lon))
 
-  chunks <- create_temporal_chunks(validated$start_dt, validated$end_dt, frequency, max_days_per_chunk = 31)
+  chunks <- create_temporal_chunks(validated$start_dt, validated$end_dt, frequency,
+    n_variables = length(x = variables))
+
+  is_single <- validated$dataset_type == "single"
+  download_func <- if (is_single) download_era5_single else download_era5_pressure
+
+  # download_era5_single() has no pressure_levels argument.
+  download_point_chunk <- function(start, end, output_file) {
+    dl_args <- list(
+      variables = variables, start_date = start, end_date = end, area = area,
+      resolution = 0.25, frequency = frequency, output_file = output_file,
+      use_cache = use_cache
+    )
+    if (!is_single) dl_args$pressure_levels <- pressure_levels
+    do.call(download_func, dl_args)
+  }
 
   if (length(x = chunks) > 1) {
     all_files <- vapply(seq_along(along.with = chunks), function(i) {
-      download_func <- if (validated$dataset_type == "single") download_era5_single else download_era5_pressure
-      download_func(
-        variables = variables,
-        pressure_levels = pressure_levels,
-        start_date = chunks[[i]]$start,
-        end_date = chunks[[i]]$end,
-        area = area,
-        resolution = 0.25,
-        frequency = frequency,
-        output_file = file.path(output_dir, sprintf(
+      download_point_chunk(
+        chunks[[i]]$start, chunks[[i]]$end,
+        file.path(output_dir, sprintf(
           "%s_point_chunk%d_%s.nc",
           request_id, i, format(Sys.Date(), "%Y%m%d")
-        )),
-        use_cache = use_cache
+        ))
       )
     }, character(1))
 
@@ -591,20 +639,12 @@ era5ify_point <- function(request_id, variables, start_date, end_date, lat, lon,
     rownames(processed_data) <- NULL
     if (!save_raw) unlink(all_files)
   } else {
-    download_func <- if (validated$dataset_type == "single") download_era5_single else download_era5_pressure
-    downloaded_file <- download_func(
-      variables = variables,
-      pressure_levels = pressure_levels,
-      start_date = validated$start_dt,
-      end_date = validated$end_dt,
-      area = area,
-      resolution = 0.25,
-      frequency = frequency,
-      output_file = file.path(output_dir, sprintf(
+    downloaded_file <- download_point_chunk(
+      validated$start_dt, validated$end_dt,
+      file.path(output_dir, sprintf(
         "%s_point_%s_%s.nc",
         request_id, validated$dataset_type, format(Sys.Date(), "%Y%m%d")
-      )),
-      use_cache = use_cache
+      ))
     )
 
     processed_data <- extract_point_data(downloaded_file, lat, lon)

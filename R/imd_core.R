@@ -453,3 +453,96 @@ save_imd_results <- function(data, request_id, var_type, resolution, frequency, 
 
   invisible(output_file)
 }
+
+#' Download IMD temperature aggregated per GeoJSON feature (region x time)
+#'
+#' Unlike [imd_temperature_geojson()], which returns grid points clipped to
+#' the GeoJSON boundary, this returns one row per feature (e.g. per state)
+#' per time period, with the region-mean temperature.
+#'
+#' @param request_id Unique identifier for the request.
+#' @param start_year Start year (>= 1951).
+#' @param end_year End year (<= 2024).
+#' @param geojson_file Path to a GeoJSON whose features are the regions.
+#' @param feature_col Name of the GeoJSON property to group by (e.g.
+#'   `"state_name"`). If NULL, the first non-geometry column is used.
+#' @param var_type `"tmax"`, `"tmin"`, or `"tmean"` (mean of tmax & tmin).
+#'   Default `"tmean"`.
+#' @param frequency `"monthly"` (default), `"yearly"`, or `"daily"`.
+#' @param use_cache Use cached IMD downloads if available (default TRUE).
+#' @return A data.frame: `region`, `year`, `month` (if monthly), `temperature`.
+#' @export
+#' @examples
+#' \dontrun{
+#' temp <- imd_temperature_by_region(
+#'   request_id = "india_states",
+#'   start_year = 2009, end_year = 2024,
+#'   geojson_file = "india_states.geojson",
+#'   feature_col = "state_name", var_type = "tmean", frequency = "monthly"
+#' )
+#' }
+imd_temperature_by_region <- function(request_id, start_year, end_year,
+                                      geojson_file, feature_col = NULL,
+                                      var_type = "tmean", frequency = "monthly",
+                                      use_cache = TRUE) {
+  stopifnot(var_type %in% c("tmax", "tmin", "tmean"))
+  old_s2 <- sf::sf_use_s2()
+  sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(old_s2), add = TRUE)
+
+  regions <- sf::st_make_valid(sf::st_read(geojson_file, quiet = TRUE))
+  if (is.null(feature_col)) {
+    feature_col <- setdiff(names(regions), attr(regions, "sf_column"))[1]
+  }
+
+  read_all <- function(vt) {
+    files <- download_imd_temperature(start_year, end_year, var_type = vt,
+      use_cache = use_cache)
+    yrs <- start_year:end_year
+    do.call(rbind, Map(function(f, y) read_imd_temperature(f, vt, y), files, yrs))
+  }
+
+  # Join once on unique cells, not per-row, so multi-year pulls don't repeat
+  # the point-in-polygon match for every date.
+  build_key <- function(df) {
+    uc <- unique(df[, c("longitude", "latitude")])
+    s <- sf::st_join(
+      sf::st_as_sf(uc, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE),
+      regions, join = sf::st_within
+    )
+    k <- sf::st_drop_geometry(s)[, c("longitude", "latitude", feature_col)]
+    names(k)[3] <- "region"
+    k
+  }
+
+  agg <- function(df, key) {
+    d <- merge(df, key, by = c("longitude", "latitude"))
+    d <- d[!is.na(d$region), ]
+    d$year <- as.integer(format(as.Date(d$date), "%Y"))
+    if (frequency == "monthly") {
+      d$month <- as.integer(format(as.Date(d$date), "%m"))
+      grp <- c("region", "year", "month")
+    } else if (frequency == "yearly") {
+      grp <- c("region", "year")
+    } else {
+      d$date <- as.Date(d$date)
+      grp <- c("region", "date")
+    }
+    result <- stats::aggregate(d$temperature, by = d[grp], FUN = mean, na.rm = TRUE)
+    names(result)[ncol(result)] <- "temperature"
+    result
+  }
+
+  if (var_type %in% c("tmax", "tmin")) {
+    raw <- read_all(var_type)
+  } else {
+    tmax_raw <- read_all("tmax")
+    tmin_raw <- read_all("tmin")
+    raw <- merge(tmax_raw, tmin_raw, by = c("longitude", "latitude", "date"),
+      suffixes = c("_max", "_min"))
+    raw$temperature <- (raw$temperature_max + raw$temperature_min) / 2
+  }
+  key <- build_key(raw)
+  out <- agg(raw, key)
+  out[order(out$region, out$year), ]
+}

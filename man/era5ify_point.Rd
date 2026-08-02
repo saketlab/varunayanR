@@ -21,7 +21,8 @@ era5ify_point(
   output_dir = tempdir(),
   use_cache = TRUE,
   convert_units = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  use_timeseries_api = NA
 )
 }
 \arguments{
@@ -56,6 +57,12 @@ When TRUE, temperature variables are returned in Celsius (converted from Kelvin)
 and precipitation variables are returned in mm (converted from meters).}
 
 \item{verbose}{Whether to print detailed progress messages.}
+
+\item{use_timeseries_api}{Whether to use the CDS time-series endpoint, which
+serves a point directly and is much faster than subsetting a gridded
+download (default: NA, meaning use it for hourly single-level requests,
+the only ones it supports). Set FALSE to force the gridded download. The
+gridded download is used automatically if the endpoint is unavailable.}
 }
 \value{
 data.frame with processed climate data. When \code{convert_units = TRUE}:
